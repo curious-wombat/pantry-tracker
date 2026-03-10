@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { -webkit-tap-highlight-color: transparent; }
+  
+  body {
+    @apply bg-cream font-body text-gray-900 antialiased;
+    overscroll-behavior: none;
+  }
+
+  /* Safe area insets for iPhone notch/home indicator */
+  .safe-top { padding-top: env(safe-area-inset-top); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .pb-safe { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-forest text-white font-semibold px-5 py-3 rounded-2xl active:scale-95 transition-transform duration-100 shadow-md;
+  }
+  .btn-ghost {
+    @apply text-forest font-semibold px-5 py-3 rounded-2xl active:scale-95 transition-transform duration-100;
+  }
+  .card {
+    @apply bg-white rounded-2xl shadow-card p-4;
+  }
+  .input-field {
+    @apply w-full bg-cream-dark border-0 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400
+           focus:outline-none focus:ring-2 focus:ring-forest/30 transition-all;
+  }
+  .tag {
+    @apply text-xs font-semibold px-2.5 py-1 rounded-full;
+  }
+}
+
+/* Smooth scrolling */
+.scroll-container {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 0; }
+
+/* Prevent body scroll when modal open */
+.modal-open { overflow: hidden; }

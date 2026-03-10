@@ -95,7 +95,8 @@ export default function AddItemModal({ item, onSave, onClose }) {
                 min="0"
                 step="0.5"
                 value={form.quantity}
-                onChange={e => set('quantity', parseFloat(e.target.value) || 0)}
+onChange={e => set('quantity', e.target.value)}
+onBlur={e => set('quantity', parseFloat(e.target.value) || 0)}
                 className="input-field"
               />
             </div>

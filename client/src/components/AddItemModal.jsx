@@ -163,7 +163,8 @@ export default function AddItemModal({ item, onSave, onClose }) {
                   min="0"
                   step="0.5"
                   value={form.low_stock_threshold}
-                  onChange={e => set('low_stock_threshold', parseFloat(e.target.value) || 1)}
+onChange={e => set('low_stock_threshold', e.target.value)}
+onBlur={e => set('low_stock_threshold', parseFloat(e.target.value) || 1)}
                   className="input-field flex-1"
                 />
                 <span className="text-gray-500 text-sm font-medium whitespace-nowrap">{form.unit}</span>

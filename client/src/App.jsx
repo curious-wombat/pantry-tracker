@@ -66,6 +66,7 @@ export default function App() {
     if (res.ok) {
       await fetchItems()
       showToast(isEdit ? 'Item updated' : 'Item added')
+      if (data.storage_location) setInventoryLocation(data.storage_location)
       setShowAddModal(false); setEditingItem(null)
     }
   }

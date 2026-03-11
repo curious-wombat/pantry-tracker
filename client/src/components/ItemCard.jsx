@@ -6,7 +6,7 @@ export default function ItemCard({ item, onUse, onEdit, onDelete, onAddToGrocery
   const [pressing, setPressing] = useState(false)
   const pressTimer = useRef(null)
 
-  const isLow = item.commonly_used === 1 && item.quantity <= item.low_stock_threshold
+  const isLow = locationItems.filter(i => i.commonly_used === 1 && i.quantity <= i.low_stock_threshold).length
   const isEmpty = item.quantity <= 0
 
   const handlePressStart = () => {

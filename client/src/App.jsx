@@ -46,10 +46,6 @@ export default function App() {
     Promise.all([fetchItems(), fetchGrocery(), fetchLists()]).finally(() => setLoading(false))
   }, [householdCode, fetchItems, fetchGrocery, fetchLists])
 
-  const handleHouseholdComplete = (code) => {
-    setHousehold(code)
-  }
-
   const handleSwitchHousehold = () => setIsSwitching(true)
 
   const handleHouseholdComplete = (code) => {

@@ -2,6 +2,12 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
+// Clean up orphaned items (no list_id)
+router.delete('/orphans', (req, res) => {
+  const result = db.prepare('DELETE FROM grocery_items WHERE list_id IS NULL AND household_code = ?').run(req.householdCode)
+  res.json({ deleted: result.changes })
+})
+
 router.get('/', (req, res) => {
   const { list_id } = req.query;
   const hc = req.householdCode;

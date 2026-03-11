@@ -213,6 +213,7 @@ export default function GroceryList({ items, lists, onAdd, onUpdate, onDelete, o
                     <div className="space-y-2">
                       {unchecked.map(item => (
                         <SortableGroceryItem key={item.id} item={item} lists={lists}
+  currentListId={currentListId}
                           onToggle={(id, val) => onUpdate(id, { checked: val })}
                           onDelete={onDelete} onRestock={handleRestock}
                           onMoveToList={(id, listId) => onUpdate(id, { list_id: listId })}
@@ -232,6 +233,7 @@ export default function GroceryList({ items, lists, onAdd, onUpdate, onDelete, o
                   <div className="space-y-2">
                     {checked.map(item => (
                       <SortableGroceryItem key={item.id} item={item} lists={lists}
+  currentListId={currentListId}
                         onToggle={(id, val) => onUpdate(id, { checked: val })}
                         onDelete={onDelete} onRestock={handleRestock}
                         onMoveToList={(id, listId) => onUpdate(id, { list_id: listId })}
@@ -262,7 +264,7 @@ function SortableGroceryItem({ item, lists, onToggle, onDelete, onRestock, onMov
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.3 : 1 }
 
-  const otherLists = lists.filter(l => l.id !== item.list_id)
+  const otherLists = lists.filter(l => String(l.id) !== String(currentListId))
 
   return (
     <div ref={setNodeRef} style={style}

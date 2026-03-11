@@ -43,6 +43,8 @@ export default function App() {
   useEffect(() => {
     if (!householdCode) return
     setLoading(true)
+    // Clean up any orphaned grocery items first
+    apiFetch('/api/grocery/orphans', { method: 'DELETE' })
     Promise.all([fetchItems(), fetchGrocery(), fetchLists()]).finally(() => setLoading(false))
   }, [householdCode, fetchItems, fetchGrocery, fetchLists])
 
@@ -228,7 +230,7 @@ export default function App() {
       <Navigation
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        groceryCount={groceryItems.filter(i => !i.checked).length}
+        groceryCount={groceryItems.filter(i => !i.checked && i.list_id).length}
         lowStockCount={lowStockCount}
       />
 

@@ -235,8 +235,19 @@ function MealCard({ meal, isExpanded, onToggle }) {
           {/* Instructions */}
           {meal.instructions && (
             <div className="bg-cream rounded-xl p-3">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">How to Make It</p>
-              <p className="text-sm text-gray-700 leading-relaxed">{meal.instructions}</p>
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">How to Make It</p>
+              {Array.isArray(meal.instructions) ? (
+                <ol className="space-y-1.5">
+                  {meal.instructions.map((step, i) => (
+                    <li key={i} className="text-sm text-gray-700 flex gap-2">
+                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-forest/15 text-forest text-xs font-bold flex items-center justify-center mt-0.5">{i + 1}</span>
+                      <span className="leading-relaxed">{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="text-sm text-gray-700 leading-relaxed">{meal.instructions}</p>
+              )}
             </div>
           )}
         </div>

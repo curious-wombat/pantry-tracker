@@ -58,6 +58,7 @@ const addCol = (table, col, type) => {
 
 addCol('items', 'preferred_list_id', 'INTEGER');
 addCol('items', 'expiration_date', 'TEXT');
+addCol('items', 'purchased_date', 'TEXT');
 addCol('items', 'household_code', "TEXT NOT NULL DEFAULT 'default'");
 addCol('grocery_items', 'list_id', 'INTEGER');
 addCol('grocery_items', 'sort_order', 'INTEGER DEFAULT 0');

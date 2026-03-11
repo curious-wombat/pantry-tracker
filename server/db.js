@@ -3,11 +3,8 @@ const path = require('path');
 const fs = require('fs');
 
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'data', 'pantry.db');
-
 const dataDir = path.dirname(DB_PATH);
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
+if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 
 const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
@@ -17,6 +14,7 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     color TEXT DEFAULT '#2D6A4F',
+    household_code TEXT NOT NULL DEFAULT 'default',
     created_at TEXT DEFAULT (datetime('now'))
   );
 
@@ -31,6 +29,7 @@ db.exec(`
     low_stock_threshold REAL DEFAULT 1,
     preferred_list_id INTEGER REFERENCES grocery_lists(id) ON DELETE SET NULL,
     expiration_date TEXT,
+    household_code TEXT NOT NULL DEFAULT 'default',
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
   );
@@ -46,33 +45,36 @@ db.exec(`
     sort_order INTEGER DEFAULT 0,
     is_auto_generated INTEGER DEFAULT 0,
     source_item_id INTEGER,
+    household_code TEXT NOT NULL DEFAULT 'default',
     created_at TEXT DEFAULT (datetime('now'))
   );
 `);
 
-// Migrate existing data
-const itemCols = db.prepare("PRAGMA table_info(items)").all().map(c => c.name);
-if (!itemCols.includes('preferred_list_id')) {
-  db.exec('ALTER TABLE items ADD COLUMN preferred_list_id INTEGER');
-}
-if (!itemCols.includes('expiration_date')) {
-  db.exec('ALTER TABLE items ADD COLUMN expiration_date TEXT');
-}
+// Migrations
+const addCol = (table, col, type) => {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all().map(c => c.name);
+  if (!cols.includes(col)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`);
+};
 
-const groceryCols = db.prepare("PRAGMA table_info(grocery_items)").all().map(c => c.name);
-if (!groceryCols.includes('list_id')) {
-  db.exec('ALTER TABLE grocery_items ADD COLUMN list_id INTEGER');
-}
-if (!groceryCols.includes('sort_order')) {
-  db.exec('ALTER TABLE grocery_items ADD COLUMN sort_order INTEGER DEFAULT 0');
-}
+addCol('items', 'preferred_list_id', 'INTEGER');
+addCol('items', 'expiration_date', 'TEXT');
+addCol('items', 'household_code', "TEXT NOT NULL DEFAULT 'default'");
+addCol('grocery_items', 'list_id', 'INTEGER');
+addCol('grocery_items', 'sort_order', 'INTEGER DEFAULT 0');
+addCol('grocery_items', 'household_code', "TEXT NOT NULL DEFAULT 'default'");
+addCol('grocery_lists', 'household_code', "TEXT NOT NULL DEFAULT 'default'");
 
-// Seed default lists if none exist
-const listCount = db.prepare('SELECT COUNT(*) as count FROM grocery_lists').get();
+// Migrate any 'default' records to 'jo-house'
+db.prepare("UPDATE items SET household_code = 'jo-house' WHERE household_code = 'default'").run();
+db.prepare("UPDATE grocery_items SET household_code = 'jo-house' WHERE household_code = 'default'").run();
+db.prepare("UPDATE grocery_lists SET household_code = 'jo-house' WHERE household_code = 'default'").run();
+
+// Seed default lists for 'jo-house' if none exist
+const listCount = db.prepare("SELECT COUNT(*) as count FROM grocery_lists WHERE household_code = 'jo-house'").get();
 if (listCount.count === 0) {
-  db.prepare("INSERT INTO grocery_lists (name, color) VALUES (?, ?)").run('Regular Groceries', '#2D6A4F');
-  db.prepare("INSERT INTO grocery_lists (name, color) VALUES (?, ?)").run('Costco', '#457B9D');
-  db.prepare("INSERT INTO grocery_lists (name, color) VALUES (?, ?)").run('Asian Market', '#E07B39');
+  db.prepare("INSERT INTO grocery_lists (name, color, household_code) VALUES (?, ?, ?)").run('Regular Groceries', '#2D6A4F', 'jo-house');
+  db.prepare("INSERT INTO grocery_lists (name, color, household_code) VALUES (?, ?, ?)").run('Costco', '#457B9D', 'jo-house');
+  db.prepare("INSERT INTO grocery_lists (name, color, household_code) VALUES (?, ?, ?)").run('Asian Market', '#E07B39', 'jo-house');
 }
 
 module.exports = db;

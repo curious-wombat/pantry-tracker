@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { apiFetch } from '../api'
 
 export default function ImportModal({ onClose, onImportComplete }) {
   const [step, setStep] = useState('choose') // choose | preview | result
@@ -42,7 +43,7 @@ export default function ImportModal({ onClose, onImportComplete }) {
   const handleImport = async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/import', {
+      const res = await apiFetch('/api/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items: rows })

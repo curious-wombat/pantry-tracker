@@ -1,3 +1,4 @@
+import { apiFetch } from '../api'
 import { useState } from 'react'
 
 const TAG_COLORS = {
@@ -25,7 +26,7 @@ export default function MealSuggestions({ items }) {
     setExpanded(null)
 
     try {
-      const res = await fetch('/api/meals/suggest', {
+      const res = await apiFetch('/api/meals/suggest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items: availableItems })

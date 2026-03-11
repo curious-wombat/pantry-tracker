@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import { apiFetch, getHouseholdCode, setHouseholdCode } from './api'
+import HouseholdSetup from './components/HouseholdSetup'
 import Navigation from './components/Navigation'
 import InventoryView from './components/InventoryView'
 import GroceryList from './components/GroceryList'
@@ -6,6 +8,8 @@ import MealSuggestions from './components/MealSuggestions'
 import AddItemModal from './components/AddItemModal'
 
 export default function App() {
+  const [householdCode, setHousehold] = useState(getHouseholdCode())
+  const [isSwitching, setIsSwitching] = useState(false)
   const [activeTab, setActiveTab] = useState('inventory')
   const [inventoryLocation, setInventoryLocation] = useState('pantry')
   const [items, setItems] = useState([])
@@ -22,48 +26,60 @@ export default function App() {
   }
 
   const fetchItems = useCallback(async () => {
-    const res = await fetch('/api/items')
+    const res = await apiFetch('/api/items')
     if (res.ok) setItems(await res.json())
   }, [])
 
   const fetchGrocery = useCallback(async () => {
-    const res = await fetch('/api/grocery')
+    const res = await apiFetch('/api/grocery')
     if (res.ok) setGroceryItems(await res.json())
   }, [])
 
   const fetchLists = useCallback(async () => {
-    const res = await fetch('/api/lists')
+    const res = await apiFetch('/api/lists')
     if (res.ok) setGroceryLists(await res.json())
   }, [])
 
   useEffect(() => {
+    if (!householdCode) return
+    setLoading(true)
     Promise.all([fetchItems(), fetchGrocery(), fetchLists()]).finally(() => setLoading(false))
-  }, [fetchItems, fetchGrocery, fetchLists])
+  }, [householdCode, fetchItems, fetchGrocery, fetchLists])
+
+  const handleHouseholdComplete = (code) => {
+    setHousehold(code)
+  }
+
+  const handleSwitchHousehold = () => setIsSwitching(true)
+
+  const handleHouseholdComplete = (code) => {
+    setHousehold(code)
+    setIsSwitching(false)
+    setItems([]); setGroceryItems([]); setGroceryLists([])
+  }
 
   // Item CRUD
   const saveItem = async (data) => {
     const isEdit = !!data.id
-    const res = await fetch(isEdit ? `/api/items/${data.id}` : '/api/items', {
+    const res = await apiFetch(isEdit ? `/api/items/${data.id}` : '/api/items', {
       method: isEdit ? 'PUT' : 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     })
     if (res.ok) {
       await fetchItems()
       showToast(isEdit ? 'Item updated' : 'Item added')
-      setShowAddModal(false)
-      setEditingItem(null)
+      setShowAddModal(false); setEditingItem(null)
     }
   }
 
   const deleteItem = async (id) => {
-    await fetch(`/api/items/${id}`, { method: 'DELETE' })
+    await apiFetch(`/api/items/${id}`, { method: 'DELETE' })
     setItems(prev => prev.filter(i => i.id !== id))
     showToast('Item removed')
   }
 
   const useItem = async (id) => {
-    const res = await fetch(`/api/items/${id}/use`, { method: 'POST' })
+    const res = await apiFetch(`/api/items/${id}/use`, { method: 'POST' })
     if (res.ok) {
       const updated = await res.json()
       setItems(prev => prev.map(i => i.id === id ? updated : i))
@@ -72,35 +88,22 @@ export default function App() {
   }
 
   const addToGroceryList = async (itemId, listId) => {
-    const res = await fetch('/api/grocery/add-from-inventory', {
+    const res = await apiFetch('/api/grocery/add-from-inventory', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ item_id: itemId, list_id: listId })
     })
-    if (res.ok) {
-      await fetchGrocery()
-      showToast('Added to grocery list!')
-    } else if (res.status === 409) {
-      showToast('Already on grocery list', 'info')
-    }
+    if (res.ok) { await fetchGrocery(); showToast('Added to grocery list!') }
+    else if (res.status === 409) showToast('Already on grocery list', 'info')
   }
 
   // Grocery CRUD
   const addGroceryItem = async (data) => {
-    const res = await fetch('/api/grocery', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    })
+    const res = await apiFetch('/api/grocery', { method: 'POST', body: JSON.stringify(data) })
     if (res.ok) { await fetchGrocery(); showToast('Added to grocery list') }
   }
 
   const updateGroceryItem = async (id, data) => {
-    const res = await fetch(`/api/grocery/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    })
+    const res = await apiFetch(`/api/grocery/${id}`, { method: 'PUT', body: JSON.stringify(data) })
     if (res.ok) {
       const updated = await res.json()
       setGroceryItems(prev => prev.map(i => i.id === id ? updated : i))
@@ -108,12 +111,12 @@ export default function App() {
   }
 
   const deleteGroceryItem = async (id) => {
-    await fetch(`/api/grocery/${id}`, { method: 'DELETE' })
+    await apiFetch(`/api/grocery/${id}`, { method: 'DELETE' })
     setGroceryItems(prev => prev.filter(i => i.id !== id))
   }
 
   const generateGroceryList = async () => {
-    const res = await fetch('/api/grocery/generate', { method: 'POST' })
+    const res = await apiFetch('/api/grocery/generate', { method: 'POST' })
     if (res.ok) {
       const data = await res.json()
       await fetchGrocery()
@@ -122,39 +125,31 @@ export default function App() {
   }
 
   const restockGroceryItem = async (id) => {
-    await fetch(`/api/grocery/${id}/restock`, { method: 'POST' })
+    await apiFetch(`/api/grocery/${id}/restock`, { method: 'POST' })
     await Promise.all([fetchItems(), fetchGrocery()])
     showToast('Restocked to inventory!')
   }
 
   const clearCheckedGrocery = async (listId) => {
     const url = listId ? `/api/grocery/checked/all?list_id=${listId}` : '/api/grocery/checked/all'
-    await fetch(url, { method: 'DELETE' })
+    await apiFetch(url, { method: 'DELETE' })
     setGroceryItems(prev => listId ? prev.filter(i => !(i.checked && i.list_id === listId)) : prev.filter(i => !i.checked))
     showToast('Cleared checked items')
   }
 
   // List CRUD
   const createList = async (name, color) => {
-    const res = await fetch('/api/lists', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, color })
-    })
+    const res = await apiFetch('/api/lists', { method: 'POST', body: JSON.stringify({ name, color }) })
     if (res.ok) { await fetchLists(); showToast('List created') }
   }
 
   const updateList = async (id, data) => {
-    const res = await fetch(`/api/lists/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    })
+    const res = await apiFetch(`/api/lists/${id}`, { method: 'PUT', body: JSON.stringify(data) })
     if (res.ok) { await fetchLists(); showToast('List updated') }
   }
 
   const deleteList = async (id) => {
-    const res = await fetch(`/api/lists/${id}`, { method: 'DELETE' })
+    const res = await apiFetch(`/api/lists/${id}`, { method: 'DELETE' })
     if (res.ok) { await Promise.all([fetchLists(), fetchGrocery()]); showToast('List deleted') }
     else showToast('Cannot delete the last list', 'warning')
   }
@@ -165,7 +160,15 @@ export default function App() {
     setShowAddModal(true)
   }
 
-  const lowStockCount = items.filter(i => i.commonly_used === 1 && i.quantity <= i.low_stock_threshold).length
+  const lowStockCount = items.filter(i => i.commonly_used === 1 && i.quantity < i.low_stock_threshold).length
+
+  if (!householdCode || isSwitching) return (
+    <HouseholdSetup
+      onComplete={handleHouseholdComplete}
+      isSwitching={isSwitching}
+      currentCode={householdCode}
+    />
+  )
 
   if (loading) {
     return (
@@ -202,6 +205,8 @@ export default function App() {
             groceryLists={groceryLists}
             lowStockCount={lowStockCount}
             onImportComplete={fetchItems}
+            householdCode={householdCode}
+            onSwitchHousehold={handleSwitchHousehold}
           />
         )}
         {activeTab === 'grocery' && (

@@ -8,7 +8,7 @@ const LOCATION_CONFIG = {
   freezer: { label: 'Freezer', emoji: '🧊', color: 'bg-blue-100 text-blue-600 border-blue-200' }
 }
 
-export default function InventoryView({ items, location, setLocation, onUse, onEdit, onDelete, onAdd, onAddToGrocery, groceryLists, onImportComplete }) {
+export default function InventoryView({ items, location, setLocation, onUse, onEdit, onDelete, onAdd, onAddToGrocery, groceryLists, onImportComplete, householdCode, onSwitchHousehold }) {
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState('category')
   const [showImport, setShowImport] = useState(false)
@@ -41,9 +41,15 @@ export default function InventoryView({ items, location, setLocation, onUse, onE
   return (
     <div className="flex flex-col h-screen">
       <div className="bg-white px-5 pt-14 pb-4 sticky top-0 z-30 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-1">
           <h1 className="font-display text-2xl font-bold text-gray-900">{config.emoji} {config.label}</h1>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            {householdCode && (
+              <button onClick={onSwitchHousehold}
+                className="px-2.5 py-1.5 bg-cream-dark text-gray-500 text-xs font-semibold rounded-xl active:scale-95 transition-transform flex items-center gap-1">
+                🏠 <span className="max-w-[80px] truncate">{householdCode}</span>
+              </button>
+            )}
             <button onClick={() => setShowImport(true)}
               className="px-3 py-2 bg-cream-dark text-gray-600 text-xs font-bold rounded-xl active:scale-95 transition-transform">
               📥 Import

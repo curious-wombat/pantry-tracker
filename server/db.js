@@ -30,6 +30,7 @@ db.exec(`
     commonly_used INTEGER DEFAULT 0,
     low_stock_threshold REAL DEFAULT 1,
     preferred_list_id INTEGER REFERENCES grocery_lists(id) ON DELETE SET NULL,
+    expiration_date TEXT,
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
   );
@@ -53,6 +54,9 @@ db.exec(`
 const itemCols = db.prepare("PRAGMA table_info(items)").all().map(c => c.name);
 if (!itemCols.includes('preferred_list_id')) {
   db.exec('ALTER TABLE items ADD COLUMN preferred_list_id INTEGER');
+}
+if (!itemCols.includes('expiration_date')) {
+  db.exec('ALTER TABLE items ADD COLUMN expiration_date TEXT');
 }
 
 const groceryCols = db.prepare("PRAGMA table_info(grocery_items)").all().map(c => c.name);

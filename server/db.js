@@ -64,17 +64,8 @@ addCol('grocery_items', 'sort_order', 'INTEGER DEFAULT 0');
 addCol('grocery_items', 'household_code', "TEXT NOT NULL DEFAULT 'default'");
 addCol('grocery_lists', 'household_code', "TEXT NOT NULL DEFAULT 'default'");
 
-// Migrate any 'default' records to 'jo-house'
-db.prepare("UPDATE items SET household_code = 'jo-house' WHERE household_code = 'default'").run();
-db.prepare("UPDATE grocery_items SET household_code = 'jo-house' WHERE household_code = 'default'").run();
-db.prepare("UPDATE grocery_lists SET household_code = 'jo-house' WHERE household_code = 'default'").run();
+// Migration: 'default' household code is no longer used; new households are set up via the app
+db.prepare("UPDATE items SET household_code = 'default' WHERE household_code = 'default'").run();
 
-// Seed default lists for 'jo-house' if none exist
-const listCount = db.prepare("SELECT COUNT(*) as count FROM grocery_lists WHERE household_code = 'jo-house'").get();
-if (listCount.count === 0) {
-  db.prepare("INSERT INTO grocery_lists (name, color, household_code) VALUES (?, ?, ?)").run('Regular Groceries', '#2D6A4F', 'jo-house');
-  db.prepare("INSERT INTO grocery_lists (name, color, household_code) VALUES (?, ?, ?)").run('Costco', '#457B9D', 'jo-house');
-  db.prepare("INSERT INTO grocery_lists (name, color, household_code) VALUES (?, ?, ?)").run('Asian Market', '#E07B39', 'jo-house');
-}
 
 module.exports = db;

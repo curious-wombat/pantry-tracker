@@ -213,10 +213,11 @@ export default function GroceryList({ items, lists, onAdd, onUpdate, onDelete, o
                     <div className="space-y-2">
                       {unchecked.map(item => (
                         <SortableGroceryItem key={item.id} item={item} lists={lists}
-  currentListId={currentListId}
+                          currentListId={currentListId}
                           onToggle={(id, val) => onUpdate(id, { checked: val })}
                           onDelete={onDelete} onRestock={handleRestock}
                           onMoveToList={(id, listId) => onUpdate(id, { list_id: listId })}
+                          onEdit={(id, data) => onUpdate(id, data)}
                           restocking={restocking === item.id} />
                       ))}
                     </div>
@@ -233,10 +234,11 @@ export default function GroceryList({ items, lists, onAdd, onUpdate, onDelete, o
                   <div className="space-y-2">
                     {checked.map(item => (
                       <SortableGroceryItem key={item.id} item={item} lists={lists}
-  currentListId={currentListId}
+                        currentListId={currentListId}
                         onToggle={(id, val) => onUpdate(id, { checked: val })}
                         onDelete={onDelete} onRestock={handleRestock}
                         onMoveToList={(id, listId) => onUpdate(id, { list_id: listId })}
+                        onEdit={(id, data) => onUpdate(id, data)}
                         restocking={restocking === item.id} />
                     ))}
                   </div>
@@ -259,85 +261,164 @@ export default function GroceryList({ items, lists, onAdd, onUpdate, onDelete, o
   )
 }
 
-function SortableGroceryItem({ item, lists, onToggle, onDelete, onRestock, onMoveToList, restocking }) {
+function GroceryEditModal({ item, onSave, onClose }) {
+  const [form, setForm] = useState({
+    name: item.name,
+    quantity: item.quantity,
+    unit: item.unit,
+    storage_location: item.storage_location
+  })
+  const UNITS = ['item', 'serving', 'oz', 'lb', 'kg', 'g', 'ml', 'L', 'cup', 'tbsp', 'tsp', 'can', 'box', 'bag', 'bunch', 'bottle', 'pack', 'slice']
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col justify-end">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-t-3xl shadow-lift animate-slide-up">
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1 bg-gray-200 rounded-full" />
+        </div>
+        <div className="flex items-center justify-between px-5 pt-2 pb-4 border-b border-gray-100">
+          <h2 className="font-display text-xl font-bold text-gray-900">Edit Item</h2>
+          <button onClick={onClose} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4">
+              <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+        <div className="px-5 py-4 space-y-4">
+          <div>
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Name</label>
+            <input type="text" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} autoFocus className="input-field" />
+          </div>
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Quantity</label>
+              <input type="number" min="0" step="0.5" value={form.quantity}
+                onChange={e => setForm(p => ({ ...p, quantity: e.target.value }))}
+                onBlur={e => setForm(p => ({ ...p, quantity: parseFloat(e.target.value) || 1 }))}
+                className="input-field" />
+            </div>
+            <div className="flex-1">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Unit</label>
+              <select value={form.unit} onChange={e => setForm(p => ({ ...p, unit: e.target.value }))} className="input-field">
+                {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Storage Location</label>
+            <div className="flex gap-2">
+              {['pantry', 'fridge', 'freezer'].map(loc => (
+                <button key={loc} type="button" onClick={() => setForm(p => ({ ...p, storage_location: loc }))}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all border
+                    ${form.storage_location === loc ? 'bg-forest text-white border-forest' : 'bg-cream text-gray-600 border-transparent'}`}>
+                  {loc.charAt(0).toUpperCase() + loc.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="px-5 py-4 border-t border-gray-100">
+          <button onClick={() => onSave(form)} disabled={!form.name.trim()}
+            className="w-full py-4 bg-forest text-white rounded-2xl font-bold text-base shadow-md disabled:opacity-40">
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function SortableGroceryItem({ item, lists, currentListId, onToggle, onDelete, onRestock, onMoveToList, onEdit, restocking }) {
   const [showMoveMenu, setShowMoveMenu] = useState(false)
+  const [showEdit, setShowEdit] = useState(false)
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.3 : 1 }
 
   const otherLists = lists.filter(l => String(l.id) !== String(currentListId))
 
   return (
-    <div ref={setNodeRef} style={style}
-      className={`bg-white rounded-2xl shadow-card overflow-visible transition-opacity ${item.checked ? 'opacity-60' : ''}`}>
-      <div className="flex items-center gap-2 px-3 py-3">
-        {/* Drag handle */}
-        <div {...attributes} {...listeners}
-          className="text-gray-200 cursor-grab active:cursor-grabbing touch-none flex-shrink-0 p-1">
-          <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-            <circle cx="9" cy="5" r="1.5" /><circle cx="15" cy="5" r="1.5" />
-            <circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
-            <circle cx="9" cy="19" r="1.5" /><circle cx="15" cy="19" r="1.5" />
-          </svg>
-        </div>
-
-        {/* Checkbox */}
-        <button onClick={() => onToggle(item.id, !item.checked)}
-          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all
-            ${item.checked === 1 ? 'bg-forest border-forest' : 'border-gray-300'}`}>
-          {item.checked === 1 && (
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" className="w-3.5 h-3.5">
-              <polyline points="20 6 9 17 4 12" strokeLinecap="round" strokeLinejoin="round" />
+    <>
+      <div ref={setNodeRef} style={style}
+        className={`bg-white rounded-2xl shadow-card overflow-visible transition-opacity ${item.checked === 1 ? 'opacity-60' : ''}`}>
+        <div className="flex items-center gap-2 px-3 py-3">
+          {/* Drag handle */}
+          <div {...attributes} {...listeners}
+            className="text-gray-200 cursor-grab active:cursor-grabbing touch-none flex-shrink-0 p-1">
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+              <circle cx="9" cy="5" r="1.5" /><circle cx="15" cy="5" r="1.5" />
+              <circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
+              <circle cx="9" cy="19" r="1.5" /><circle cx="15" cy="19" r="1.5" />
             </svg>
-          )}
-        </button>
+          </div>
 
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <p className={`font-semibold text-sm ${item.checked === 1 ? 'line-through text-gray-400' : 'text-gray-900'}`}>{item.name}</p>
-          <p className="text-xs text-gray-400">{item.quantity} {item.unit} · {item.storage_location}{item.is_auto_generated === 1 ? ' · ⚡' : ''}</p>
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-1">
-          {otherLists.length > 0 && (
-            <div className="relative">
-              <button onClick={() => setShowMoveMenu(!showMoveMenu)}
-                className="text-xs font-bold px-2 py-1.5 bg-cream-dark text-gray-500 rounded-lg active:scale-95 transition-transform">
-                ↗
-              </button>
-              {showMoveMenu && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setShowMoveMenu(false)} />
-                  <div className="absolute right-0 bottom-full mb-1 bg-white rounded-xl shadow-lift p-2 z-50 min-w-[150px]">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 px-1">Move to</p>
-                    {otherLists.map(list => (
-                      <button key={list.id} onClick={() => { onMoveToList(item.id, list.id); setShowMoveMenu(false) }}
-                        className="w-full text-left px-2 py-2 text-sm font-medium hover:bg-cream rounded-lg flex items-center gap-2 transition-colors">
-                        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: list.color }} />
-                        {list.name}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-          {item.checked === 1 && (
-            <button onClick={() => onRestock(item.id)} disabled={restocking}
-              className="text-xs font-bold px-2.5 py-1.5 bg-forest/10 text-forest rounded-lg active:scale-95 transition-transform disabled:opacity-50">
-              {restocking ? '…' : '↑ Stock'}
-            </button>
-          )}
-
-          <button onClick={() => onDelete(item.id)}
-            className="w-7 h-7 flex items-center justify-center text-gray-300 active:text-red-400 transition-colors">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4">
-              <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" />
-            </svg>
+          {/* Checkbox */}
+          <button onClick={() => onToggle(item.id, !item.checked)}
+            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all
+              ${item.checked === 1 ? 'bg-forest border-forest' : 'border-gray-300'}`}>
+            {item.checked === 1 && (
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" className="w-3.5 h-3.5">
+                <polyline points="20 6 9 17 4 12" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
           </button>
+
+          {/* Info — tap to edit */}
+          <div className="flex-1 min-w-0" onClick={() => setShowEdit(true)}>
+            <p className={`font-semibold text-sm ${item.checked === 1 ? 'line-through text-gray-400' : 'text-gray-900'}`}>{item.name}</p>
+            <p className="text-xs text-gray-400">{item.quantity} {item.unit} · {item.storage_location}{item.is_auto_generated === 1 ? ' · ⚡' : ''}</p>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-1">
+            {otherLists.length > 0 && (
+              <div className="relative">
+                <button onClick={() => setShowMoveMenu(!showMoveMenu)}
+                  className="text-xs font-bold px-2 py-1.5 bg-cream-dark text-gray-500 rounded-lg active:scale-95 transition-transform">
+                  ↗
+                </button>
+                {showMoveMenu && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowMoveMenu(false)} />
+                    <div className="absolute right-0 bottom-full mb-1 bg-white rounded-xl shadow-lift p-2 z-50 min-w-[150px]">
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 px-1">Move to</p>
+                      {otherLists.map(list => (
+                        <button key={list.id} onClick={() => { onMoveToList(item.id, list.id); setShowMoveMenu(false) }}
+                          className="w-full text-left px-2 py-2 text-sm font-medium hover:bg-cream rounded-lg flex items-center gap-2 transition-colors">
+                          <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: list.color }} />
+                          {list.name}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {item.checked === 1 && (
+              <button onClick={() => onRestock(item.id)} disabled={restocking}
+                className="text-xs font-bold px-2.5 py-1.5 bg-forest/10 text-forest rounded-lg active:scale-95 transition-transform disabled:opacity-50">
+                {restocking ? '…' : '↑ Stock'}
+              </button>
+            )}
+
+            <button onClick={() => onDelete(item.id)}
+              className="w-7 h-7 flex items-center justify-center text-gray-300 active:text-red-400 transition-colors">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4">
+                <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+
+      {showEdit && (
+        <GroceryEditModal
+          item={item}
+          onSave={(data) => { onEdit(item.id, data); setShowEdit(false) }}
+          onClose={() => setShowEdit(false)}
+        />
+      )}
+    </>
   )
 }

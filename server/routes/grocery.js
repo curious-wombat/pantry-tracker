@@ -120,6 +120,8 @@ router.delete('/:id', (req, res) => {
   db.prepare('DELETE FROM grocery_items WHERE id = ? AND household_code = ?').run(req.params.id, req.householdCode);
   res.json({ success: true });
 });
+
+router.delete('/checked/all', (req, res) => {
   const { list_id } = req.query;
   const hc = req.householdCode;
   if (list_id) {

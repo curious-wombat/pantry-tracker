@@ -17,12 +17,28 @@ router.post('/suggest', async (req, res) => {
       max_tokens: 2048,
       messages: [{
         role: 'user',
-        content: `Based on these pantry items, suggest 4 healthy meal ideas. Focus on high-protein, lower-carb options. Include vegetarian options where possible. For each meal provide: name, brief description, key ingredients from the list, and approximate macros (protein/carbs/fat).
+        content: `Based on these pantry items, suggest 4 healthy meal ideas. Focus on high-protein, lower-carb options. Include vegetarian options where possible.
 
 Pantry items:
 ${itemList}
 
-Respond in JSON format: { "meals": [{ "name": "", "description": "", "ingredients": [], "macros": { "protein": "", "carbs": "", "fat": "" }, "prepTime": "" }] }`
+Respond ONLY with a JSON object in exactly this format, no other text:
+{
+  "meals": [
+    {
+      "name": "Meal Name",
+      "description": "Brief 1-2 sentence description",
+      "prepTime": "20 minutes",
+      "calories": "450 cal",
+      "protein": "35g protein",
+      "isVegetarian": false,
+      "tags": ["high-protein", "low-carb"],
+      "availableIngredients": ["ingredient you have", "another you have"],
+      "neededIngredients": ["anything they need to buy"],
+      "instructions": "Brief 2-3 sentence cooking instructions."
+    }
+  ]
+}`
       }]
     });
 

@@ -86,6 +86,14 @@ export default function App() {
     }
   }
 
+  const incrementItem = async (id) => {
+    const res = await apiFetch(`/api/items/${id}/increment`, { method: 'POST' })
+    if (res.ok) {
+      const updated = await res.json()
+      setItems(prev => prev.map(i => i.id === id ? updated : i))
+    }
+  }
+
   const addToGroceryList = async (itemId, listId) => {
     const res = await apiFetch('/api/grocery/add-from-inventory', {
       method: 'POST',
@@ -129,6 +137,15 @@ export default function App() {
     showToast('Restocked to inventory!')
   }
 
+  const restockAllChecked = async (listId) => {
+    const res = await apiFetch('/api/grocery/restock/all', { method: 'POST', body: JSON.stringify({ list_id: listId }) })
+    if (res.ok) {
+      const data = await res.json()
+      await Promise.all([fetchItems(), fetchGrocery()])
+      showToast(`Restocked ${data.restocked} item${data.restocked !== 1 ? 's' : ''} to inventory!`)
+    }
+  }
+
   const clearCheckedGrocery = async (listId) => {
     const url = listId ? `/api/grocery/checked/all?list_id=${listId}` : '/api/grocery/checked/all'
     await apiFetch(url, { method: 'DELETE' })
@@ -160,6 +177,14 @@ export default function App() {
   }
 
   const lowStockCount = items.filter(i => i.commonly_used === 1 && i.quantity < i.low_stock_threshold).length
+
+  const today = new Date(); today.setHours(0,0,0,0)
+  const threeDays = new Date(today); threeDays.setDate(today.getDate() + 3)
+  const expiringSoonCount = items.filter(i => {
+    if (!i.expiration_date) return false
+    const exp = new Date(i.expiration_date); exp.setHours(0,0,0,0)
+    return exp <= threeDays
+  }).length
 
   if (!householdCode || isSwitching) return (
     <HouseholdSetup
@@ -197,12 +222,14 @@ export default function App() {
             location={inventoryLocation}
             setLocation={setInventoryLocation}
             onUse={useItem}
+            onIncrement={incrementItem}
             onEdit={openEdit}
             onDelete={deleteItem}
             onAdd={openAdd}
             onAddToGrocery={addToGroceryList}
             groceryLists={groceryLists}
             lowStockCount={lowStockCount}
+            expiringSoonCount={expiringSoonCount}
             onImportComplete={fetchItems}
             householdCode={householdCode}
             onSwitchHousehold={handleSwitchHousehold}
@@ -217,6 +244,7 @@ export default function App() {
             onDelete={deleteGroceryItem}
             onGenerate={generateGroceryList}
             onRestock={restockGroceryItem}
+            onRestockAll={restockAllChecked}
             onClearChecked={clearCheckedGrocery}
             onCreateList={createList}
             onUpdateList={updateList}
@@ -233,6 +261,7 @@ export default function App() {
         setActiveTab={setActiveTab}
         groceryCount={groceryItems.filter(i => !i.checked && i.list_id).length}
         lowStockCount={lowStockCount}
+        expiringSoonCount={expiringSoonCount}
       />
 
       {showAddModal && (

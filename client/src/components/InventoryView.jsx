@@ -8,7 +8,7 @@ const LOCATION_CONFIG = {
   freezer: { label: 'Freezer', emoji: '🧊', color: 'bg-blue-100 text-blue-600 border-blue-200' }
 }
 
-export default function InventoryView({ items, location, setLocation, onUse, onEdit, onDelete, onAdd, onAddToGrocery, groceryLists, onImportComplete, householdCode, onSwitchHousehold }) {
+export default function InventoryView({ items, location, setLocation, onUse, onIncrement, onEdit, onDelete, onAdd, onAddToGrocery, groceryLists, lowStockCount, expiringSoonCount, onImportComplete, householdCode, onSwitchHousehold }) {
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState('category')
   const [showImport, setShowImport] = useState(false)
@@ -22,9 +22,22 @@ export default function InventoryView({ items, location, setLocation, onUse, onE
           return i.name.toLowerCase().includes(q) || i.category.toLowerCase().includes(q)
         })
       : items.filter(i => i.storage_location === location)
-    if (sortBy === 'category') filtered.sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name))
-    else if (sortBy === 'name') filtered.sort((a, b) => a.name.localeCompare(b.name))
-    else if (sortBy === 'low') filtered.sort((a, b) => (a.quantity - a.low_stock_threshold) - (b.quantity - b.low_stock_threshold))
+
+    if (sortBy === 'expiring') {
+      const t = new Date(); t.setHours(0,0,0,0)
+      const d3 = new Date(t); d3.setDate(t.getDate() + 3)
+      filtered = filtered.filter(i => {
+        if (!i.expiration_date) return false
+        const exp = new Date(i.expiration_date); exp.setHours(0,0,0,0)
+        return exp <= d3
+      }).sort((a, b) => new Date(a.expiration_date) - new Date(b.expiration_date))
+    } else if (sortBy === 'category') {
+      filtered.sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name))
+    } else if (sortBy === 'name') {
+      filtered.sort((a, b) => a.name.localeCompare(b.name))
+    } else if (sortBy === 'low') {
+      filtered.sort((a, b) => (a.quantity - a.low_stock_threshold) - (b.quantity - b.low_stock_threshold))
+    }
     return filtered
   }, [items, location, search, sortBy, isSearching])
 
@@ -40,6 +53,14 @@ export default function InventoryView({ items, location, setLocation, onUse, onE
 
   const config = LOCATION_CONFIG[location]
   const isLow = locationItems.filter(i => i.commonly_used === 1 && i.quantity < i.low_stock_threshold).length
+
+  const today = new Date(); today.setHours(0,0,0,0)
+  const threeDays = new Date(today); threeDays.setDate(today.getDate() + 3)
+  const expiringSoon = !isSearching && items.filter(i => {
+    if (i.storage_location !== location || !i.expiration_date) return false
+    const exp = new Date(i.expiration_date); exp.setHours(0,0,0,0)
+    return exp <= threeDays
+  })
 
   return (
     <div className="flex flex-col h-screen">
@@ -96,11 +117,24 @@ export default function InventoryView({ items, location, setLocation, onUse, onE
         </div>
       )}
 
-      <div className="flex gap-2 px-4 mt-3">
-        {[['category', 'By Category'], ['name', 'A–Z'], ['low', 'Low Stock']].map(([val, label]) => (
+      {expiringSoon && expiringSoon.length > 0 && sortBy !== 'expiring' && (
+        <button onClick={() => setSortBy('expiring')}
+          className="mx-4 mt-2 px-4 py-2.5 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 w-auto text-left active:scale-95 transition-transform">
+          <span className="text-lg">🕐</span>
+          <p className="text-red-600 text-sm font-medium flex-1">
+            {expiringSoon.length} item{expiringSoon.length > 1 ? 's' : ''} expiring soon — tap to view
+          </p>
+          <span className="text-red-400 text-xs">→</span>
+        </button>
+      )}
+
+      <div className="flex gap-2 px-4 mt-3 overflow-x-auto">
+        {[['category', 'By Category'], ['name', 'A–Z'], ['low', 'Low Stock'], ['expiring', '🕐 Use It Up']].map(([val, label]) => (
           <button key={val} onClick={() => setSortBy(val)}
-            className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-all
-              ${sortBy === val ? 'bg-forest text-white' : 'bg-cream-dark text-gray-500'}`}>
+            className={`flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full transition-all
+              ${sortBy === val
+                ? val === 'expiring' ? 'bg-red-500 text-white' : 'bg-forest text-white'
+                : 'bg-cream-dark text-gray-500'}`}>
             {label}
           </button>
         ))}
@@ -119,7 +153,7 @@ export default function InventoryView({ items, location, setLocation, onUse, onE
               {sortBy === 'category' && <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 px-1">{cat}</h3>}
               <div className="space-y-2">
                 {catItems.map(item => (
-                  <ItemCard key={item.id} item={item} onUse={onUse} onEdit={onEdit} onDelete={onDelete}
+                  <ItemCard key={item.id} item={item} onUse={onUse} onIncrement={onIncrement} onEdit={onEdit} onDelete={onDelete}
                     onAddToGrocery={onAddToGrocery} groceryLists={groceryLists}
                     showLocation={isSearching} />
                 ))}

@@ -1,6 +1,9 @@
 # 🥬 Pantry Tracker
 
-A full-stack pantry, fridge, and freezer tracker with AI-powered meal suggestions, multi-household support, and grocery list management. Works as a PWA — installable on iPhone like a native app.
+A full-stack progressive web app (PWA) for tracking household pantry, fridge, and freezer inventory — with AI-powered meal suggestions, grocery list management, and multi-household support.
+
+**Live app:** https://pantry-tracker-production.up.railway.app  
+**GitHub:** https://github.com/curious-wombat/pantry-tracker
 
 ---
 
@@ -8,147 +11,54 @@ A full-stack pantry, fridge, and freezer tracker with AI-powered meal suggestion
 
 ### Inventory
 - Track items across **Pantry**, **Fridge**, and **Freezer**
-- **Tap item name** to edit inline (name, quantity, unit, storage location)
-- **Long-press** any item card to edit or delete
-- **− button** to decrement quantity by one (quick "used one")
-- **★ Commonly Used** flag — marks items for low-stock tracking
-- **Low-stock alerts** — orange bar + tag when quantity drops below your threshold
-- **Expiration date** tracking on fridge and freezer items
-  - **Leftovers auto-expiry** — adding a Leftovers item to the fridge automatically sets expiration to 4 days from today
-  - Color-coded tags: gray (future), orange (≤3 days), red (expired/today)
-- **Categories**: Produce, Protein, Dairy, Grains, Pantry Staples, Spices, Leftovers, Snacks, Frozen, Condiments, Beverages, Other
-- **Search and sort** by category, name, or low-stock
-- **Bulk CSV import** — import up to 100+ items at once with preview
-- **Preferred store** per item — set which grocery list an item restocks to
+- **+ / − buttons** to increment or decrement quantity directly from the card
+- **Long-press** any item card to Edit or Delete
+- **Expiration date tracking** with color-coded urgency tags (gray → orange → red)
+- **Auto-expiration** for Leftovers in fridge (4 days from today)
+- **Low stock alerts** when commonly-used items fall below threshold
+- **⚠️ Expiring soon banner** — tappable alert when items expire within 3 days
+- **🕐 Use It Up mode** — filters to expiring items sorted by soonest first
+- **Sort by** Category, A–Z, Low Stock, or Use It Up
+- **Search across all locations** — results show a location tag (fridge / pantry / freezer)
+- **Bulk import** via CSV upload
+- **Add item to grocery list** via cart button on item card
 
 ### Grocery Lists
-- **Multiple named lists** with custom colors (e.g. Regular Groceries, Costco, Asian Market)
-- **Drag to reorder** items within a list (touch-friendly)
-- **Move between lists** — ↗ button to move any item to another list
-- **Tap item** to edit name, quantity, unit, or storage location inline
-- **Auto-generate** grocery list from all low-stock ★ items
-- **Add from inventory** — cart button on any item card adds it to your preferred list
-- **Restock button** on checked items — sends purchased items back to inventory
-- **Clear all checked** items at once
+- Multiple named grocery lists (e.g. Costco, Whole Foods, Trader Joe's)
+- **Drag-and-drop** to reorder items within a list
+- **Move items** between lists
+- **Auto-fill** from low-stock inventory items
+- **↩ Restock all** — one tap to send all checked items back to inventory
+- **↩ Restock individual** items from the Done section
+- **Clear all** checked items
+- Tap item name to edit inline (quantity, unit, storage location)
 
-### Meal Suggestions
-- **AI-powered** via Anthropic's Claude API
-- Suggests 4 meals based on what's actually in your pantry
-- Dietary focus: high-protein, lower-carb, pre-diabetes friendly, vegetarian-inclusive
-- Shows ingredients, approximate macros, and prep time
+### Meal Ideas (AI-powered)
+- Choose meal type: 🌅 Breakfast · 🥗 Lunch · 🍽️ Dinner · 🍎 Snack · 🍓 Dessert
+- **Prioritizes expiring ingredients** automatically when generating suggestions
+- Tuned for: high-protein, low-carb, low-GI, pre-diabetes friendly, fiber-rich, colorful micronutrients
+- Macro targets: 1700–1900 cal/day, 100–120g protein/day
+- Each suggestion shows: prep time, calories, protein, tags, ingredients you have, what to buy, and numbered step-by-step instructions
+- Vegetarian options included
 
-### Households
-- **Multi-household support** — each household has its own private code
-- First visit prompts you to enter or create a household code
-- Share your code with housemates to access the same pantry
-- **Switch households** anytime via the 🏠 button — enter any code to jump to a different household
-- All data (inventory, grocery lists, settings) is fully isolated per household
-
----
-
-## Local Development
-
-### Prerequisites
-- Node.js 18+ ([download](https://nodejs.org))
-- An Anthropic API key ([get one](https://console.anthropic.com))
-
-### Setup
-
-```bash
-cd pantry-tracker
-npm run setup
-cp .env.example server/.env
-# Add your ANTHROPIC_API_KEY to server/.env
-npm install -g concurrently   # one-time
-npm run dev
-```
-
-This starts:
-- Server at `http://localhost:3001`
-- Client at `http://localhost:5173`
+### Multi-Household
+- Each household has a unique code (e.g. `jo-house`, `kelly-house`)
+- Switch households via 🏠 button in the inventory header
+- All data is scoped per household
 
 ---
 
-## Deploying to Railway
+## Tech Stack
 
-Railway is the recommended host. Free tier includes 500 hours/month.
-
-### Step 1: Push to GitHub
-
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-git remote add origin https://github.com/YOUR_USERNAME/pantry-tracker.git
-git push -u origin main
-```
-
-### Step 2: Create a Railway project
-
-1. Go to [railway.app](https://railway.app) → login with GitHub
-2. **New Project** → **Deploy from GitHub repo** → select `pantry-tracker`
-
-### Step 3: Configure
-
-In Railway service settings:
-- **Build Command:** `npm run deploy-build`
-- **Start Command:** `npm start`
-
-### Step 4: Environment variables
-
-| Variable | Value |
-|---|---|
-| `ANTHROPIC_API_KEY` | your key from console.anthropic.com |
-| `NODE_ENV` | `production` |
-| `PORT` | `8080` |
-| `DB_PATH` | `/data/pantry.db` |
-
-### Step 5: Add a Volume (required for data persistence)
-
-In Railway → your service → **Volumes** tab → add volume mounted at `/data`
-
-### Step 6: Get your URL
-
-Railway provides a URL like `https://pantry-tracker-production.up.railway.app`
-
----
-
-## Installing on iPhone
-
-1. Open your app URL in **Chrome** on iPhone
-2. Tap the **share icon** in Chrome's address bar
-3. Tap **Add to Home Screen**
-4. Name it "Pantry" → tap **Add**
-
-It will appear on your home screen and launch like a native app.
-
----
-
-## Household Codes
-
-The app uses simple shared codes — no accounts or passwords needed.
-
-- **First visit:** you'll see a setup screen. Enter any code (e.g. `jo-house`)
-- **Housemates:** give them the same code — they'll see your shared pantry
-- **New household:** use a different code — completely separate data
-- **Switch:** tap the 🏠 code button in the top bar and enter a different code
-- Codes are case-insensitive (`jo-house` = `JO-HOUSE`) and can contain letters, numbers, and hyphens
-
----
-
-## CSV Import Format
-
-To bulk-import items, create a CSV with these columns:
-
-```
-name,quantity,unit,category,storage_location,commonly_used,low_stock_threshold
-Olive Oil,1,bottle,Pantry Staples,pantry,true,1
-Eggs,12,item,Protein,fridge,true,4
-```
-
-- `storage_location`: must be `pantry`, `fridge`, or `freezer`
-- `commonly_used`: `true` or `false`
-- All fields except `name` and `storage_location` are optional
+| Layer | Tech |
+|-------|------|
+| Frontend | React + Vite + Tailwind CSS |
+| Backend | Node.js + Express |
+| Database | SQLite (better-sqlite3) |
+| AI | Anthropic Claude API (claude-sonnet-4-6) |
+| PWA | vite-plugin-pwa |
+| Drag & Drop | @dnd-kit/core + @dnd-kit/sortable |
+| Hosting | Railway (with persistent /data volume) |
 
 ---
 
@@ -156,56 +66,92 @@ Eggs,12,item,Protein,fridge,true,4
 
 ```
 pantry-tracker/
-├── client/                      # React frontend (Vite + Tailwind)
-│   ├── src/
-│   │   ├── api.js               # Fetch wrapper — sends household code header
-│   │   ├── App.jsx              # Main state + routing
-│   │   └── components/
-│   │       ├── HouseholdSetup.jsx   # First-visit + switch screen
-│   │       ├── Navigation.jsx
-│   │       ├── InventoryView.jsx
-│   │       ├── ItemCard.jsx
-│   │       ├── AddItemModal.jsx
-│   │       ├── GroceryList.jsx
-│   │       ├── ImportModal.jsx
-│   │       └── MealSuggestions.jsx
-│   ├── vite.config.js           # PWA config + dev proxy
-│   └── tailwind.config.js       # Custom colors: forest, sage, cream, terra, frost, amber
-├── server/
-│   ├── middleware/
-│   │   └── household.js         # Extracts + validates X-Household-Code header
-│   ├── routes/
-│   │   ├── items.js             # Inventory CRUD
-│   │   ├── grocery.js           # Grocery list CRUD + generate + restock
-│   │   ├── lists.js             # Grocery list tabs CRUD + bootstrap
-│   │   ├── meals.js             # Anthropic API meal suggestions
-│   │   └── import.js            # Bulk CSV import
-│   ├── db.js                    # SQLite setup + migrations
-│   └── index.js                 # Express server
-├── .env.example
-└── README.md
+  /client
+    /src
+      App.jsx
+      api.js
+      /components
+        AddItemModal.jsx
+        GroceryList.jsx
+        HouseholdSetup.jsx
+        ImportModal.jsx
+        InventoryView.jsx
+        ItemCard.jsx
+        MealSuggestions.jsx
+        Navigation.jsx
+    vite.config.js
+    tailwind.config.js
+  /server
+    index.js
+    db.js
+    /middleware
+      household.js
+    /routes
+      grocery.js
+      import.js
+      items.js
+      lists.js
+      meals.js
+  package.json
 ```
 
 ---
 
-## PWA Icons
+## Database Schema
 
-For a proper app icon, add to `client/public/`:
-- `icon-192.png` (192×192 px)
-- `icon-512.png` (512×512 px)
+```sql
+items (
+  id, name, quantity, unit, category, storage_location,
+  commonly_used, low_stock_threshold, preferred_list_id,
+  expiration_date, household_code, created_at, updated_at
+)
 
-Create icons at [favicon.io](https://favicon.io). App works without them but will use the default browser icon.
+grocery_lists (id, name, color, household_code, created_at)
+
+grocery_items (
+  id, name, quantity, unit, storage_location, list_id,
+  checked, sort_order, is_auto_generated, source_item_id,
+  household_code, created_at
+)
+```
 
 ---
 
-## Tech Stack
+## CSV Import Format
 
-| Layer | Tech |
-|---|---|
-| Frontend | React 18, Vite, Tailwind CSS |
-| Drag & drop | @dnd-kit/core + @dnd-kit/sortable |
-| PWA | vite-plugin-pwa |
-| Backend | Node.js, Express |
-| Database | SQLite (better-sqlite3) |
-| AI | Anthropic Claude API (claude-sonnet-4-6) |
-| Hosting | Railway |
+Headers: `name, quantity, unit, category, storage_location, commonly_used, low_stock_threshold, expiration_date`
+
+Valid values:
+- **unit:** item, serving, oz, lb, kg, g, ml, L, cup, tbsp, tsp, can, jar, box, bag, bunch, bottle, pack, slice
+- **category:** Produce, Protein, Dairy, Grains, Pantry Staples, Spices, Leftovers, Snacks, Frozen, Condiments, Beverages, Other
+- **storage_location:** pantry, fridge, freezer
+- **commonly_used:** true / false
+- **expiration_date:** YYYY-MM-DD (optional)
+
+---
+
+## Deployment (Railway)
+
+- **Build command:** `npm run deploy-build`
+- **Start command:** `npm start`
+- **Env vars:** `ANTHROPIC_API_KEY`, `NODE_ENV=production`, `PORT=8080`, `DB_PATH=/data/pantry.db`
+- **Volume:** mounted at `/data` for SQLite persistence
+
+### To update: edit on GitHub → Railway auto-redeploys. Always `Cmd+A` before pasting a file.
+
+### Force fresh build: bump version in root `package.json`
+
+### Clear PWA cache:
+```js
+navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+location.reload();
+```
+
+---
+
+## Known Gotchas
+
+- **SQLite booleans:** stored as 0/1 — always check `=== 1` in JSX, never just truthiness
+- **List ID type mismatch:** use `String()` comparison when filtering lists
+- **Meal suggestions JSON truncation:** `max_tokens` set to 4096 for large inventories

@@ -18,7 +18,7 @@ import { CSS } from '@dnd-kit/utilities'
 
 const LIST_COLORS = ['#2D6A4F', '#457B9D', '#E07B39', '#9B5DE5', '#E63946', '#2A9D8F', '#E9C46A']
 
-export default function GroceryList({ items, lists, onAdd, onUpdate, onDelete, onGenerate, onRestock, onClearChecked, onCreateList, onUpdateList, onDeleteList }) {
+export default function GroceryList({ items, lists, onAdd, onUpdate, onDelete, onGenerate, onRestock, onRestockAll, onClearChecked, onCreateList, onUpdateList, onDeleteList }) {
   const [activeListId, setActiveListId] = useState(null)
   const [showAddForm, setShowAddForm] = useState(false)
   const [showListManager, setShowListManager] = useState(false)
@@ -229,7 +229,10 @@ export default function GroceryList({ items, lists, onAdd, onUpdate, onDelete, o
                 <div>
                   <div className="flex items-center justify-between mb-2 px-1">
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Done ({checked.length})</p>
-                    <button onClick={() => onClearChecked(currentListId)} className="text-xs text-red-400 font-semibold">Clear all</button>
+                    <div className="flex gap-3">
+                      <button onClick={() => onRestockAll(currentListId)} className="text-xs text-forest font-semibold">↩ Restock all</button>
+                      <button onClick={() => onClearChecked(currentListId)} className="text-xs text-red-400 font-semibold">Clear all</button>
+                    </div>
                   </div>
                   <div className="space-y-2">
                     {checked.map(item => (
@@ -268,7 +271,7 @@ function GroceryEditModal({ item, onSave, onClose }) {
     unit: item.unit,
     storage_location: item.storage_location
   })
-  const UNITS = ['item', 'serving', 'oz', 'lb', 'kg', 'g', 'ml', 'L', 'cup', 'tbsp', 'tsp', 'can', 'box', 'bag', 'bunch', 'bottle', 'pack', 'slice']
+  const UNITS = ['item', 'serving', 'oz', 'lb', 'kg', 'g', 'ml', 'L', 'cup', 'tbsp', 'tsp', 'can', 'jar', 'box', 'bag', 'bunch', 'bottle', 'pack', 'slice']
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end">

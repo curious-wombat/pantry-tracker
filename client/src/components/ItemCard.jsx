@@ -14,7 +14,7 @@ const expirationStatus = (dateStr) => {
   return { label: `Exp ${exp.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`, color: 'bg-gray-100 text-gray-500', urgent: false }
 }
 
-export default function ItemCard({ item, onUse, onEdit, onDelete, onAddToGrocery, groceryLists = [], showLocation = false }) {
+export default function ItemCard({ item, onUse, onIncrement, onEdit, onDelete, onAddToGrocery, groceryLists = [], showLocation = false }) {
   const [showActions, setShowActions] = useState(false)
   const [showListPicker, setShowListPicker] = useState(false)
   const [pressing, setPressing] = useState(false)
@@ -92,11 +92,18 @@ export default function ItemCard({ item, onUse, onEdit, onDelete, onAddToGrocery
               </svg>
             </button>
 
-            {/* Use one button */}
+            {/* Use one (−) and add one (+) buttons */}
             <button onClick={handleUse} disabled={isEmpty}
               className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90
                 ${isEmpty ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : 'bg-forest/10 text-forest active:bg-forest active:text-white'}`}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5">
+                <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" />
+              </svg>
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); onIncrement(item.id) }}
+              className="w-10 h-10 rounded-xl flex items-center justify-center bg-forest/10 text-forest active:bg-forest active:text-white transition-all active:scale-90">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5">
+                <line x1="12" y1="5" x2="12" y2="19" strokeLinecap="round" />
                 <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" />
               </svg>
             </button>

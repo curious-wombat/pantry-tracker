@@ -54,7 +54,17 @@ router.post('/:id/use', (req, res) => {
   res.json({ ...updated, isLow: updated.commonly_used === 1 && updated.quantity < updated.low_stock_threshold });
 });
 
-router.delete('/:id', (req, res) => {
+router.post('/:id/increment', (req, res) => {
+  const { id } = req.params;
+  const { amount = 1 } = req.body;
+  const item = db.prepare('SELECT * FROM items WHERE id = ? AND household_code = ?').get(id, req.householdCode);
+  if (!item) return res.status(404).json({ error: 'Item not found' });
+  const newQty = item.quantity + amount;
+  db.prepare(`UPDATE items SET quantity=?, updated_at=datetime('now') WHERE id=?`).run(newQty, id);
+  res.json(db.prepare('SELECT * FROM items WHERE id = ?').get(id));
+});
+
+
   if (!db.prepare('SELECT id FROM items WHERE id = ? AND household_code = ?').get(req.params.id, req.householdCode))
     return res.status(404).json({ error: 'Item not found' });
   db.prepare('DELETE FROM items WHERE id = ?').run(req.params.id);

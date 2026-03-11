@@ -1,4 +1,5 @@
-export default function Navigation({ activeTab, setActiveTab, groceryCount, lowStockCount }) {
+export default function Navigation({ activeTab, setActiveTab, groceryCount, lowStockCount, expiringSoonCount }) {
+  const alertCount = (lowStockCount || 0) + (expiringSoonCount || 0)
   const tabs = [
     {
       id: 'inventory',
@@ -11,7 +12,7 @@ export default function Navigation({ activeTab, setActiveTab, groceryCount, lowS
           <line x1="10" y1="14" x2="14" y2="14" strokeLinecap="round" />
         </svg>
       ),
-      badge: lowStockCount
+      badge: alertCount
     },
     {
       id: 'grocery',

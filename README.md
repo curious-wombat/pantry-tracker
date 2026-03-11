@@ -42,7 +42,7 @@ A full-stack progressive web app (PWA) for tracking household pantry, fridge, an
 - Vegetarian options included
 
 ### Multi-Household
-- Each household has a unique code (e.g. `jo-house`, `kelly-house`)
+- Each household has a unique code (e.g. `test-house')
 - Switch households via 🏠 button in the inventory header
 - All data is scoped per household
 

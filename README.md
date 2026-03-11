@@ -1,54 +1,65 @@
 # 🥬 Pantry Tracker
 
-A full-stack pantry, fridge, and freezer tracker with AI-powered meal suggestions. Works as a PWA installable on iPhone Chrome.
+A full-stack pantry, fridge, and freezer tracker with AI-powered meal suggestions, multi-household support, and grocery list management. Works as a PWA — installable on iPhone like a native app.
 
 ---
 
 ## Features
 
-- **Inventory tracking** across Pantry, Fridge, and Freezer
-- **Quick "used one" button** for each item — optimized for mobile tap
+### Inventory
+- Track items across **Pantry**, **Fridge**, and **Freezer**
+- **Tap item name** to edit inline (name, quantity, unit, storage location)
 - **Long-press** any item card to edit or delete
-- **Low-stock alerts** for commonly-used items
-- **Expiration Alerts** for expiring items
-- **Grocery list** — manually add items or auto-generate from low-stock items
-- **Restock button** on grocery list to move purchased items back to inventory
-- **Import Feature** to bulk import items via csv format
-- **AI Meal Suggestions** via Anthropic API — high-protein, low-carb, pre-diabetes friendly
-- **PWA** — installable to iPhone Chrome home screen
+- **− button** to decrement quantity by one (quick "used one")
+- **★ Commonly Used** flag — marks items for low-stock tracking
+- **Low-stock alerts** — orange bar + tag when quantity drops below your threshold
+- **Expiration date** tracking on fridge and freezer items
+  - **Leftovers auto-expiry** — adding a Leftovers item to the fridge automatically sets expiration to 4 days from today
+  - Color-coded tags: gray (future), orange (≤3 days), red (expired/today)
+- **Categories**: Produce, Protein, Dairy, Grains, Pantry Staples, Spices, Leftovers, Snacks, Frozen, Condiments, Beverages, Other
+- **Search and sort** by category, name, or low-stock
+- **Bulk CSV import** — import up to 100+ items at once with preview
+- **Preferred store** per item — set which grocery list an item restocks to
+
+### Grocery Lists
+- **Multiple named lists** with custom colors (e.g. Regular Groceries, Costco, Asian Market)
+- **Drag to reorder** items within a list (touch-friendly)
+- **Move between lists** — ↗ button to move any item to another list
+- **Tap item** to edit name, quantity, unit, or storage location inline
+- **Auto-generate** grocery list from all low-stock ★ items
+- **Add from inventory** — cart button on any item card adds it to your preferred list
+- **Restock button** on checked items — sends purchased items back to inventory
+- **Clear all checked** items at once
+
+### Meal Suggestions
+- **AI-powered** via Anthropic's Claude API
+- Suggests 4 meals based on what's actually in your pantry
+- Dietary focus: high-protein, lower-carb, pre-diabetes friendly, vegetarian-inclusive
+- Shows ingredients, approximate macros, and prep time
+
+### Households
+- **Multi-household support** — each household has its own private code
+- First visit prompts you to enter or create a household code
+- Share your code with housemates to access the same pantry
+- **Switch households** anytime via the 🏠 button — enter any code to jump to a different household
+- All data (inventory, grocery lists, settings) is fully isolated per household
 
 ---
 
 ## Local Development
 
 ### Prerequisites
-- Node.js 18+ installed ([download here](https://nodejs.org))
-- An Anthropic API key ([get one here](https://console.anthropic.com))
+- Node.js 18+ ([download](https://nodejs.org))
+- An Anthropic API key ([get one](https://console.anthropic.com))
 
-### 1. Clone or download this project
+### Setup
 
 ```bash
 cd pantry-tracker
-```
-
-### 2. Install dependencies
-
-```bash
 npm run setup
-```
-
-### 3. Set up environment variables
-
-```bash
 cp .env.example server/.env
-```
-
-Then open `server/.env` and add your Anthropic API key.
-
-### 4. Run in development mode
-
-```bash
-npm install -g concurrently   # one-time install
+# Add your ANTHROPIC_API_KEY to server/.env
+npm install -g concurrently   # one-time
 npm run dev
 ```
 
@@ -56,19 +67,14 @@ This starts:
 - Server at `http://localhost:3001`
 - Client at `http://localhost:5173`
 
-Open `http://localhost:5173` in your browser.
-
 ---
 
-## Deploying to Railway (Recommended — Free Tier)
+## Deploying to Railway
 
-Railway is the easiest option. Free tier includes 500 hours/month.
+Railway is the recommended host. Free tier includes 500 hours/month.
 
-### Step 1: Create a GitHub account and push your code
+### Step 1: Push to GitHub
 
-1. Go to [github.com](https://github.com) and create a free account
-2. Click **New repository**, name it `pantry-tracker`, keep it private
-3. Follow GitHub's instructions to push your code:
 ```bash
 git init
 git add .
@@ -77,90 +83,72 @@ git remote add origin https://github.com/YOUR_USERNAME/pantry-tracker.git
 git push -u origin main
 ```
 
-### Step 2: Create a Railway account
+### Step 2: Create a Railway project
 
-1. Go to [railway.app](https://railway.app)
-2. Click **Login** → **Login with GitHub**
-3. Authorize Railway
+1. Go to [railway.app](https://railway.app) → login with GitHub
+2. **New Project** → **Deploy from GitHub repo** → select `pantry-tracker`
 
-### Step 3: Create a new project
+### Step 3: Configure
 
-1. Click **New Project**
-2. Select **Deploy from GitHub repo**
-3. Select `pantry-tracker`
-4. Railway will auto-detect it as a Node.js project
-
-### Step 4: Configure build & start commands
-
-In your Railway project settings:
+In Railway service settings:
 - **Build Command:** `npm run deploy-build`
 - **Start Command:** `npm start`
 
-### Step 5: Add environment variables
+### Step 4: Environment variables
 
-In Railway → your service → **Variables** tab, add:
-- `ANTHROPIC_API_KEY` = your key from console.anthropic.com
-- `NODE_ENV` = `production`
-- `PORT` = `3001`
+| Variable | Value |
+|---|---|
+| `ANTHROPIC_API_KEY` | your key from console.anthropic.com |
+| `NODE_ENV` | `production` |
+| `PORT` | `8080` |
+| `DB_PATH` | `/data/pantry.db` |
 
-Optional (for persistent database — highly recommended):
-- Add a **Volume** in Railway and set `DB_PATH` = `/data/pantry.db`
+### Step 5: Add a Volume (required for data persistence)
+
+In Railway → your service → **Volumes** tab → add volume mounted at `/data`
 
 ### Step 6: Get your URL
 
-Railway gives you a URL like `https://pantry-tracker-production.up.railway.app`
-
-Open it in iPhone Chrome → tap the share button → **Add to Home Screen**
+Railway provides a URL like `https://pantry-tracker-production.up.railway.app`
 
 ---
 
-## Deploying to Render (Alternative — Free Tier)
+## Installing on iPhone
 
-### Step 1: Push to GitHub (same as Railway Step 1 above)
+1. Open your app URL in **Chrome** on iPhone
+2. Tap the **share icon** in Chrome's address bar
+3. Tap **Add to Home Screen**
+4. Name it "Pantry" → tap **Add**
 
-### Step 2: Create a Render account
-
-1. Go to [render.com](https://render.com)
-2. Click **Get Started** → sign up with GitHub
-
-### Step 3: Create a Web Service
-
-1. Click **New** → **Web Service**
-2. Connect your `pantry-tracker` GitHub repo
-3. Configure:
-   - **Name:** pantry-tracker
-   - **Build Command:** `npm run deploy-build`
-   - **Start Command:** `npm start`
-   - **Environment:** Node
-
-### Step 4: Add environment variables
-
-Under **Environment** tab:
-- `ANTHROPIC_API_KEY` = your key
-- `NODE_ENV` = `production`
-
-### Step 5: Add a Disk (for database persistence)
-
-1. Go to your service → **Disks** tab
-2. Add a disk, mount path: `/data`
-3. Add env var: `DB_PATH` = `/data/pantry.db`
-
-### Step 6: Deploy
-
-Click **Create Web Service**. Render will build and deploy. Get your URL at the top.
-
-> ⚠️ Note: Render free tier spins down after 15 min of inactivity — first load may be slow. Railway has better free tier behavior for always-on apps.
+It will appear on your home screen and launch like a native app.
 
 ---
 
-## Installing on iPhone Chrome
+## Household Codes
 
-1. Open your app URL in Chrome on iPhone
-2. Tap the **share icon** (box with arrow) in Chrome's address bar
-3. Scroll down and tap **Add to Home Screen**
-4. Name it "Pantry" and tap **Add**
+The app uses simple shared codes — no accounts or passwords needed.
 
-It will appear on your home screen like a native app.
+- **First visit:** you'll see a setup screen. Enter any code (e.g. `jo-house`)
+- **Housemates:** give them the same code — they'll see your shared pantry
+- **New household:** use a different code — completely separate data
+- **Switch:** tap the 🏠 code button in the top bar and enter a different code
+- Codes are case-insensitive (`jo-house` = `JO-HOUSE`) and can contain letters, numbers, and hyphens
+
+---
+
+## CSV Import Format
+
+To bulk-import items, create a CSV with these columns:
+
+```
+name,quantity,unit,category,storage_location,commonly_used,low_stock_threshold
+Olive Oil,1,bottle,Pantry Staples,pantry,true,1
+Eggs,12,item,Protein,fridge,true,4
+```
+
+- `storage_location`: must be `pantry`, `fridge`, or `freezer`
+- `commonly_used`: `true` or `false`
+- All fields except `name` and `storage_location` are optional
 
 ---
 
@@ -168,37 +156,56 @@ It will appear on your home screen like a native app.
 
 ```
 pantry-tracker/
-├── client/                  # React frontend (Vite + Tailwind)
+├── client/                      # React frontend (Vite + Tailwind)
 │   ├── src/
-│   │   ├── components/
-│   │   │   ├── Navigation.jsx
-│   │   │   ├── InventoryView.jsx
-│   │   │   ├── ItemCard.jsx
-│   │   │   ├── AddItemModal.jsx
-│   │   │   ├── GroceryList.jsx
-│   │   │   └── MealSuggestions.jsx
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── vite.config.js       # PWA config + dev proxy
-│   └── tailwind.config.js
-├── server/                  # Node/Express backend
+│   │   ├── api.js               # Fetch wrapper — sends household code header
+│   │   ├── App.jsx              # Main state + routing
+│   │   └── components/
+│   │       ├── HouseholdSetup.jsx   # First-visit + switch screen
+│   │       ├── Navigation.jsx
+│   │       ├── InventoryView.jsx
+│   │       ├── ItemCard.jsx
+│   │       ├── AddItemModal.jsx
+│   │       ├── GroceryList.jsx
+│   │       ├── ImportModal.jsx
+│   │       └── MealSuggestions.jsx
+│   ├── vite.config.js           # PWA config + dev proxy
+│   └── tailwind.config.js       # Custom colors: forest, sage, cream, terra, frost, amber
+├── server/
+│   ├── middleware/
+│   │   └── household.js         # Extracts + validates X-Household-Code header
 │   ├── routes/
-│   │   ├── items.js         # Inventory CRUD
-│   │   ├── grocery.js       # Grocery list + restock
-│   │   └── meals.js         # Anthropic API meal suggestions
-│   ├── db.js                # SQLite setup
-│   └── index.js             # Express server
+│   │   ├── items.js             # Inventory CRUD
+│   │   ├── grocery.js           # Grocery list CRUD + generate + restock
+│   │   ├── lists.js             # Grocery list tabs CRUD + bootstrap
+│   │   ├── meals.js             # Anthropic API meal suggestions
+│   │   └── import.js            # Bulk CSV import
+│   ├── db.js                    # SQLite setup + migrations
+│   └── index.js                 # Express server
 ├── .env.example
 └── README.md
 ```
 
 ---
 
-## Adding PWA Icons
+## PWA Icons
 
-For a proper app icon on your home screen, add these two files to `client/public/`:
+For a proper app icon, add to `client/public/`:
 - `icon-192.png` (192×192 px)
 - `icon-512.png` (512×512 px)
 
-You can create simple icons at [favicon.io](https://favicon.io) or use any image editor.
-The app will still work without them, but will use a default browser icon.
+Create icons at [favicon.io](https://favicon.io). App works without them but will use the default browser icon.
+
+---
+
+## Tech Stack
+
+| Layer | Tech |
+|---|---|
+| Frontend | React 18, Vite, Tailwind CSS |
+| Drag & drop | @dnd-kit/core + @dnd-kit/sortable |
+| PWA | vite-plugin-pwa |
+| Backend | Node.js, Express |
+| Database | SQLite (better-sqlite3) |
+| AI | Anthropic Claude API (claude-sonnet-4-6) |
+| Hosting | Railway |

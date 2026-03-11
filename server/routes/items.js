@@ -65,6 +65,7 @@ router.post('/:id/increment', (req, res) => {
 });
 
 
+router.delete('/:id', (req, res) => {
   if (!db.prepare('SELECT id FROM items WHERE id = ? AND household_code = ?').get(req.params.id, req.householdCode))
     return res.status(404).json({ error: 'Item not found' });
   db.prepare('DELETE FROM items WHERE id = ?').run(req.params.id);

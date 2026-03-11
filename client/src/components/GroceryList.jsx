@@ -279,10 +279,10 @@ function SortableGroceryItem({ item, lists, onToggle, onDelete, onRestock, onMov
         </div>
 
         {/* Checkbox */}
-        <button onClick={() => onToggle(item.id, item.checked !== 1)}
+        <button onClick={() => onToggle(item.id, !item.checked)}
           className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all
             ${item.checked ? 'bg-forest border-forest' : 'border-gray-300'}`}>
-          {item.checked === 1 && (
+          {item.checked && (
             <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" className="w-3.5 h-3.5">
               <polyline points="20 6 9 17 4 12" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -292,7 +292,7 @@ function SortableGroceryItem({ item, lists, onToggle, onDelete, onRestock, onMov
         {/* Info */}
         <div className="flex-1 min-w-0">
           <p className={`font-semibold text-sm ${item.checked ? 'line-through text-gray-400' : 'text-gray-900'}`}>{item.name}</p>
-          <p className="text-xs text-gray-400">{item.quantity} {item.unit} · {item.storage_location}{item.is_auto_generated === 1 ? ' · ⚡' : ''}</p>
+          <p className="text-xs text-gray-400">{item.quantity} {item.unit} · {item.storage_location}{item.is_auto_generated ? ' · ⚡' : ''}</p>
         </div>
 
         {/* Actions */}
@@ -321,7 +321,7 @@ function SortableGroceryItem({ item, lists, onToggle, onDelete, onRestock, onMov
             </div>
           )}
 
-          {item.checked === 1 && (
+          {item.checked && (
             <button onClick={() => onRestock(item.id)} disabled={restocking}
               className="text-xs font-bold px-2.5 py-1.5 bg-forest/10 text-forest rounded-lg active:scale-95 transition-transform disabled:opacity-50">
               {restocking ? '…' : '↑ Stock'}

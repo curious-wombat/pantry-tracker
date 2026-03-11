@@ -201,6 +201,7 @@ export default function App() {
             onAddToGrocery={addToGroceryList}
             groceryLists={groceryLists}
             lowStockCount={lowStockCount}
+            onImportComplete={fetchItems}
           />
         )}
         {activeTab === 'grocery' && (

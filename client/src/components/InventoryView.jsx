@@ -36,7 +36,7 @@ export default function InventoryView({ items, location, setLocation, onUse, onE
   }, [locationItems, sortBy])
 
   const config = LOCATION_CONFIG[location]
-  const lowCount = locationItems.filter(i => i.commonly_used === 1 && i.quantity < i.low_stock_threshold).length
+  const isLow = locationItems.filter(i => i.commonly_used === 1 && i.quantity < i.low_stock_threshold).length
 
   return (
     <div className="flex flex-col h-screen">
@@ -80,10 +80,10 @@ export default function InventoryView({ items, location, setLocation, onUse, onE
         </div>
       </div>
 
-      {lowCount > 0 && (
+      {isLow > 0 && (
         <div className="mx-4 mt-3 px-4 py-2.5 bg-terra/10 border border-terra/20 rounded-xl flex items-center gap-2">
           <span className="text-terra text-lg">⚠️</span>
-          <p className="text-terra text-sm font-medium">{lowCount} item{lowCount > 1 ? 's' : ''} running low</p>
+          <p className="text-terra text-sm font-medium">{isLow} item{isLow > 1 ? 's' : ''} running low</p>
         </div>
       )}
 

@@ -79,6 +79,11 @@ export default function ItemCard({ item, onUse, onIncrement, onEdit, onDelete, o
               {isEmpty && <span className="tag bg-gray-100 text-gray-500">Out</span>}
               {expStatus && <span className={`tag ${expStatus.color}`}>{expStatus.label}</span>}
               {showLocation && <span className="tag bg-blue-50 text-blue-500 capitalize">{item.storage_location}</span>}
+              {item.purchased_date && (
+                <span className="text-[10px] text-gray-300 font-medium">
+                  bought {new Date(item.purchased_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </span>
+              )}
             </div>
           </div>
 

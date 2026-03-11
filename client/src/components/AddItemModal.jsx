@@ -26,7 +26,8 @@ export default function AddItemModal({ item, groceryLists = [], onSave, onClose 
     commonly_used: false,
     low_stock_threshold: 1,
     preferred_list_id: null,
-    expiration_date: null
+    expiration_date: null,
+    purchased_date: null
   })
 
   useEffect(() => {
@@ -41,6 +42,7 @@ export default function AddItemModal({ item, groceryLists = [], onSave, onClose 
         low_stock_threshold: item.low_stock_threshold ?? 1,
         preferred_list_id: item.preferred_list_id ?? null,
         expiration_date: item.expiration_date ?? null,
+        purchased_date: item.purchased_date ?? null,
         ...(item.id ? { id: item.id } : {})
       })
     }
@@ -155,6 +157,26 @@ export default function AddItemModal({ item, groceryLists = [], onSave, onClose 
               )}
             </div>
           )}
+
+          <div className="animate-fade-in">
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Purchase Date</label>
+              {form.purchased_date && (
+                <button onClick={() => set('purchased_date', null)} className="text-xs text-gray-400 font-medium">Clear</button>
+              )}
+            </div>
+            <div className="flex gap-2 items-center">
+              <input type="date" value={form.purchased_date || ''}
+                onChange={e => set('purchased_date', e.target.value || null)}
+                className="input-field flex-1" />
+              {!form.purchased_date && (
+                <button onClick={() => set('purchased_date', new Date().toISOString().split('T')[0])}
+                  className="text-xs text-forest font-semibold whitespace-nowrap">
+                  Today
+                </button>
+              )}
+            </div>
+          </div>
 
           <div className="flex items-center justify-between bg-cream rounded-xl px-4 py-3">
             <div>

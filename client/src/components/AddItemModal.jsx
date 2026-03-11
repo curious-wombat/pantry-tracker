@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 
 const UNITS = ['item', 'serving', 'oz', 'lb', 'kg', 'g', 'ml', 'L', 'cup', 'tbsp', 'tsp', 'can', 'box', 'bag', 'bunch', 'bottle', 'pack', 'slice']
-const CATEGORIES = ['Produce', 'Protein', 'Dairy', 'Grains', 'Pantry Staples', 'Spices', 'Snacks', 'Frozen', 'Condiments', 'Beverages', 'Other']
+const CATEGORIES = ['Produce', 'Protein', 'Dairy', 'Grains', 'Leftovers', 'Pantry Staples', 'Spices', 'Snacks', 'Frozen', 'Condiments', 'Beverages', 'Other']
   { value: 'pantry', label: '🫙 Pantry' },
   { value: 'fridge', label: '🥗 Fridge' },
   { value: 'freezer', label: '🧊 Freezer' }

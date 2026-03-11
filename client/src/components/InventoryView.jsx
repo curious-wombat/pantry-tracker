@@ -14,11 +14,12 @@ export default function InventoryView({ items, location, setLocation, onUse, onE
   const [showImport, setShowImport] = useState(false)
 
   const locationItems = useMemo(() => {
-    let filtered = items.filter(i => i.storage_location === location)
-    if (search) {
-      const q = search.toLowerCase()
-      filtered = filtered.filter(i => i.name.toLowerCase().includes(q) || i.category.toLowerCase().includes(q))
-    }
+    let filtered = search
+      ? items.filter(i => {
+          const q = search.toLowerCase()
+          return i.name.toLowerCase().includes(q) || i.category.toLowerCase().includes(q)
+        })
+      : items.filter(i => i.storage_location === location)
     if (sortBy === 'category') filtered.sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name))
     else if (sortBy === 'name') filtered.sort((a, b) => a.name.localeCompare(b.name))
     else if (sortBy === 'low') filtered.sort((a, b) => (a.quantity - a.low_stock_threshold) - (b.quantity - b.low_stock_threshold))
@@ -82,7 +83,7 @@ export default function InventoryView({ items, location, setLocation, onUse, onE
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400">
             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" strokeLinecap="round" />
           </svg>
-          <input type="text" placeholder="Search items…" value={search} onChange={e => setSearch(e.target.value)} className="input-field pl-10 pr-4 py-2.5 text-sm" />
+          <input type="text" placeholder="Search all locations…" value={search} onChange={e => setSearch(e.target.value)} className="input-field pl-10 pr-4 py-2.5 text-sm" />
         </div>
       </div>
 

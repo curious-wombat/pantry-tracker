@@ -185,10 +185,13 @@ function MealCard({ meal, isExpanded, onToggle }) {
         </div>
 
         {/* Stats row */}
-        <div className="flex gap-3 mt-3">
+        <div className="flex gap-2 mt-3 flex-wrap">
           <span className="tag bg-cream-dark text-gray-600">⏱ {meal.prepTime}</span>
           <span className="tag bg-cream-dark text-gray-600">🔥 {meal.calories}</span>
           <span className="tag bg-forest/10 text-forest">💪 {meal.protein}</span>
+          {meal.carbs && <span className="tag bg-amber/10 text-amber-dark">🌾 {meal.carbs}</span>}
+          {meal.fat && <span className="tag bg-blue-50 text-blue-500">🫒 {meal.fat}</span>}
+          {meal.fiber && <span className="tag bg-sage/20 text-sage">🌿 {meal.fiber}</span>}
         </div>
 
         {/* Tags */}

@@ -42,7 +42,7 @@ export default function HouseholdSetup({ onComplete, isSwitching = false, curren
             </label>
             <input
               type="text"
-              placeholder={isSwitching ? 'Enter a code…' : 'e.g. jo-house'}
+              placeholder={isSwitching ? 'Enter a code…' : 'e.g. test-house'}
               value={code}
               onChange={e => { setCode(e.target.value); setError('') }}
               onKeyDown={e => e.key === 'Enter' && handleSubmit()}

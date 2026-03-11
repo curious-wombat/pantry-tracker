@@ -36,7 +36,7 @@ export default function InventoryView({ items, location, setLocation, onUse, onE
   }, [locationItems, sortBy])
 
   const config = LOCATION_CONFIG[location]
-  const isLow = locationItems.filter(i => i.commonly_used === 1 && i.quantity <= i.low_stock_threshold).length
+  const isLow = locationItems.filter(i => i.commonly_used === 1 && i.quantity < i.low_stock_threshold).length
 
   return (
     <div className="flex flex-col h-screen">

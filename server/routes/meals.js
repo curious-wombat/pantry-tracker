@@ -25,7 +25,7 @@ router.post('/suggest', async (req, res) => {
 
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 2048,
+      max_tokens: 4096,
       messages: [{
         role: 'user',
         content: `Based on these pantry items, suggest 4 healthy ${mealType} ideas. ${mealGuidance[mealType] || ''} ${macroContext} Include vegetarian options where possible.

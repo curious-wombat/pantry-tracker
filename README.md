@@ -10,8 +10,10 @@ A full-stack pantry, fridge, and freezer tracker with AI-powered meal suggestion
 - **Quick "used one" button** for each item — optimized for mobile tap
 - **Long-press** any item card to edit or delete
 - **Low-stock alerts** for commonly-used items
+- **Expiration Alerts** for expiring items
 - **Grocery list** — manually add items or auto-generate from low-stock items
 - **Restock button** on grocery list to move purchased items back to inventory
+- **Import Feature** to bulk import items via csv format
 - **AI Meal Suggestions** via Anthropic API — high-protein, low-carb, pre-diabetes friendly
 - **PWA** — installable to iPhone Chrome home screen
 

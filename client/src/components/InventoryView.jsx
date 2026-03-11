@@ -13,8 +13,10 @@ export default function InventoryView({ items, location, setLocation, onUse, onE
   const [sortBy, setSortBy] = useState('category')
   const [showImport, setShowImport] = useState(false)
 
+  const isSearching = !!search
+
   const locationItems = useMemo(() => {
-    let filtered = search
+    let filtered = isSearching
       ? items.filter(i => {
           const q = search.toLowerCase()
           return i.name.toLowerCase().includes(q) || i.category.toLowerCase().includes(q)
@@ -24,7 +26,7 @@ export default function InventoryView({ items, location, setLocation, onUse, onE
     else if (sortBy === 'name') filtered.sort((a, b) => a.name.localeCompare(b.name))
     else if (sortBy === 'low') filtered.sort((a, b) => (a.quantity - a.low_stock_threshold) - (b.quantity - b.low_stock_threshold))
     return filtered
-  }, [items, location, search, sortBy])
+  }, [items, location, search, sortBy, isSearching])
 
   const grouped = useMemo(() => {
     if (sortBy !== 'category') return { All: locationItems }
@@ -118,7 +120,8 @@ export default function InventoryView({ items, location, setLocation, onUse, onE
               <div className="space-y-2">
                 {catItems.map(item => (
                   <ItemCard key={item.id} item={item} onUse={onUse} onEdit={onEdit} onDelete={onDelete}
-                    onAddToGrocery={onAddToGrocery} groceryLists={groceryLists} />
+                    onAddToGrocery={onAddToGrocery} groceryLists={groceryLists}
+                    showLocation={isSearching} />
                 ))}
               </div>
             </div>

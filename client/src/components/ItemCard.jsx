@@ -14,7 +14,7 @@ const expirationStatus = (dateStr) => {
   return { label: `Exp ${exp.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`, color: 'bg-gray-100 text-gray-500', urgent: false }
 }
 
-export default function ItemCard({ item, onUse, onEdit, onDelete, onAddToGrocery, groceryLists = [] }) {
+export default function ItemCard({ item, onUse, onEdit, onDelete, onAddToGrocery, groceryLists = [], showLocation = false }) {
   const [showActions, setShowActions] = useState(false)
   const [showListPicker, setShowListPicker] = useState(false)
   const [pressing, setPressing] = useState(false)
@@ -78,6 +78,7 @@ export default function ItemCard({ item, onUse, onEdit, onDelete, onAddToGrocery
               {isLow && <span className="tag bg-terra/10 text-terra">Low stock</span>}
               {isEmpty && <span className="tag bg-gray-100 text-gray-500">Out</span>}
               {expStatus && <span className={`tag ${expStatus.color}`}>{expStatus.label}</span>}
+              {showLocation && <span className="tag bg-blue-50 text-blue-500 capitalize">{item.storage_location}</span>}
             </div>
           </div>
 

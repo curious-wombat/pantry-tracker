@@ -131,10 +131,25 @@ export default function App() {
     }
   }
 
-  const restockGroceryItem = async (id) => {
-    await apiFetch(`/api/grocery/${id}/restock`, { method: 'POST' })
+  const [pendingRestock, setPendingRestock] = useState(null) // { groceryItem, possibleMatch }
+
+  const restockGroceryItem = async (id, options = {}) => {
+    const res = await apiFetch(`/api/grocery/${id}/restock`, { method: 'POST', body: JSON.stringify(options) })
+    if (!res.ok) return
+    const data = await res.json()
+    if (data.needsConfirmation) {
+      setPendingRestock({ groceryItem: data.groceryItem, possibleMatch: data.possibleMatch })
+      return
+    }
     await Promise.all([fetchItems(), fetchGrocery()])
     showToast('Restocked to inventory!')
+  }
+
+  const confirmMergeRestock = async (mergeWithId) => {
+    if (!pendingRestock) return
+    const id = pendingRestock.groceryItem.id
+    setPendingRestock(null)
+    await restockGroceryItem(id, mergeWithId ? { merge_with_id: mergeWithId } : { force_new: true })
   }
 
   const restockAllChecked = async (listId) => {
@@ -271,6 +286,35 @@ export default function App() {
           onSave={saveItem}
           onClose={() => { setShowAddModal(false); setEditingItem(null) }}
         />
+      )}
+
+      {pendingRestock && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setPendingRestock(null)} />
+          <div className="relative bg-white rounded-t-3xl shadow-lift w-full max-w-lg p-6 animate-slide-up">
+            <div className="flex justify-center mb-1"><div className="w-10 h-1 bg-gray-200 rounded-full" /></div>
+            <h3 className="font-display text-lg font-bold text-gray-900 mt-3 mb-1">Already in inventory?</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              <span className="font-semibold text-gray-800">{pendingRestock.groceryItem.name}</span> looks like it might match{' '}
+              <span className="font-semibold text-gray-800">{pendingRestock.possibleMatch.name}</span>{' '}
+              ({pendingRestock.possibleMatch.quantity} {pendingRestock.possibleMatch.unit} in {pendingRestock.possibleMatch.storage_location}).
+            </p>
+            <div className="space-y-2">
+              <button onClick={() => confirmMergeRestock(pendingRestock.possibleMatch.id)}
+                className="w-full py-3.5 bg-forest text-white rounded-2xl font-bold text-sm">
+                ＋ Add to existing ({pendingRestock.possibleMatch.quantity + pendingRestock.groceryItem.quantity} {pendingRestock.possibleMatch.unit} total)
+              </button>
+              <button onClick={() => confirmMergeRestock(null)}
+                className="w-full py-3.5 bg-cream text-gray-700 rounded-2xl font-semibold text-sm">
+                Create separate entry
+              </button>
+              <button onClick={() => setPendingRestock(null)}
+                className="w-full py-3 text-gray-400 text-sm font-medium">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

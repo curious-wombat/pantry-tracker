@@ -13,12 +13,12 @@ router.get('/', (req, res) => {
 });
 
 router.post('/', (req, res) => {
-  const { name, quantity, unit, category, storage_location, commonly_used, low_stock_threshold, preferred_list_id, expiration_date } = req.body;
+  const { name, quantity, unit, category, storage_location, commonly_used, low_stock_threshold, preferred_list_id, expiration_date, purchased_date } = req.body;
   if (!name || !storage_location) return res.status(400).json({ error: 'name and storage_location are required' });
   const result = db.prepare(`
-    INSERT INTO items (name, quantity, unit, category, storage_location, commonly_used, low_stock_threshold, preferred_list_id, expiration_date, household_code)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(name, quantity ?? 1, unit ?? 'item', category ?? 'General', storage_location, commonly_used ? 1 : 0, low_stock_threshold ?? 1, preferred_list_id ?? null, expiration_date ?? null, req.householdCode);
+    INSERT INTO items (name, quantity, unit, category, storage_location, commonly_used, low_stock_threshold, preferred_list_id, expiration_date, purchased_date, household_code)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(name, quantity ?? 1, unit ?? 'item', category ?? 'General', storage_location, commonly_used ? 1 : 0, low_stock_threshold ?? 1, preferred_list_id ?? null, expiration_date ?? null, purchased_date ?? null, req.householdCode);
   res.status(201).json(db.prepare('SELECT * FROM items WHERE id = ?').get(result.lastInsertRowid));
 });
 
@@ -26,10 +26,10 @@ router.put('/:id', (req, res) => {
   const { id } = req.params;
   const item = db.prepare('SELECT * FROM items WHERE id = ? AND household_code = ?').get(id, req.householdCode);
   if (!item) return res.status(404).json({ error: 'Item not found' });
-  const { name, quantity, unit, category, storage_location, commonly_used, low_stock_threshold, preferred_list_id, expiration_date } = req.body;
+  const { name, quantity, unit, category, storage_location, commonly_used, low_stock_threshold, preferred_list_id, expiration_date, purchased_date } = req.body;
   db.prepare(`
     UPDATE items SET name=?, quantity=?, unit=?, category=?, storage_location=?,
-      commonly_used=?, low_stock_threshold=?, preferred_list_id=?, expiration_date=?, updated_at=datetime('now')
+      commonly_used=?, low_stock_threshold=?, preferred_list_id=?, expiration_date=?, purchased_date=?, updated_at=datetime('now')
     WHERE id=? AND household_code=?
   `).run(
     name ?? item.name, quantity ?? item.quantity, unit ?? item.unit,
@@ -38,6 +38,7 @@ router.put('/:id', (req, res) => {
     low_stock_threshold ?? item.low_stock_threshold,
     preferred_list_id !== undefined ? preferred_list_id : item.preferred_list_id,
     expiration_date !== undefined ? expiration_date : item.expiration_date,
+    purchased_date !== undefined ? purchased_date : item.purchased_date,
     id, req.householdCode
   );
   res.json(db.prepare('SELECT * FROM items WHERE id = ?').get(id));

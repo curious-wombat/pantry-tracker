@@ -67,16 +67,26 @@ router.post('/restock/all', (req, res) => {
   ).all(list_id, hc);
 
   let restocked = 0;
+  const today = new Date().toISOString().split('T')[0];
   for (const grocItem of checkedItems) {
     if (grocItem.source_item_id) {
       const src = db.prepare('SELECT * FROM items WHERE id = ?').get(grocItem.source_item_id);
       if (src) {
-        db.prepare(`UPDATE items SET quantity=?, updated_at=datetime('now') WHERE id=?`)
-          .run(src.quantity + grocItem.quantity, grocItem.source_item_id);
+        db.prepare(`UPDATE items SET quantity=?, purchased_date=?, updated_at=datetime('now') WHERE id=?`)
+          .run(src.quantity + grocItem.quantity, today, grocItem.source_item_id);
       }
     } else {
-      db.prepare(`INSERT INTO items (name, quantity, unit, storage_location, household_code) VALUES (?, ?, ?, ?, ?)`)
-        .run(grocItem.name, grocItem.quantity, grocItem.unit, grocItem.storage_location || 'pantry', hc);
+      // Fuzzy match for restock all
+      const fuzzy = db.prepare(
+        `SELECT * FROM items WHERE LOWER(TRIM(name)) = LOWER(TRIM(?)) AND household_code = ? LIMIT 1`
+      ).get(grocItem.name, hc);
+      if (fuzzy) {
+        db.prepare(`UPDATE items SET quantity=?, purchased_date=?, updated_at=datetime('now') WHERE id=?`)
+          .run(fuzzy.quantity + grocItem.quantity, today, fuzzy.id);
+      } else {
+        db.prepare(`INSERT INTO items (name, quantity, unit, storage_location, purchased_date, household_code) VALUES (?, ?, ?, ?, ?, ?)`)
+          .run(grocItem.name, grocItem.quantity, grocItem.unit, grocItem.storage_location || 'pantry', today, hc);
+      }
     }
     db.prepare('DELETE FROM grocery_items WHERE id = ?').run(grocItem.id);
     restocked++;
@@ -115,12 +125,43 @@ router.put('/:id', (req, res) => {
 router.post('/:id/restock', (req, res) => {
   const grocItem = db.prepare('SELECT * FROM grocery_items WHERE id = ? AND household_code = ?').get(req.params.id, req.householdCode);
   if (!grocItem) return res.status(404).json({ error: 'Item not found' });
+
+  const today = new Date().toISOString().split('T')[0];
+  const { force_new, merge_with_id } = req.body || {};
+
   if (grocItem.source_item_id) {
+    // Linked item — always increment existing
     const src = db.prepare('SELECT * FROM items WHERE id = ?').get(grocItem.source_item_id);
-    if (src) db.prepare(`UPDATE items SET quantity=?, updated_at=datetime('now') WHERE id=?`).run(src.quantity + grocItem.quantity, grocItem.source_item_id);
-  } else {
-    db.prepare(`INSERT INTO items (name, quantity, unit, storage_location, household_code) VALUES (?, ?, ?, ?, ?)`).run(grocItem.name, grocItem.quantity, grocItem.unit, grocItem.storage_location, req.householdCode);
+    if (src) db.prepare(`UPDATE items SET quantity=?, purchased_date=?, updated_at=datetime('now') WHERE id=?`)
+      .run(src.quantity + grocItem.quantity, today, grocItem.source_item_id);
+    db.prepare('DELETE FROM grocery_items WHERE id = ?').run(req.params.id);
+    return res.json({ success: true });
   }
+
+  // Manually typed item — check for explicit merge instruction first
+  if (merge_with_id) {
+    const src = db.prepare('SELECT * FROM items WHERE id = ? AND household_code = ?').get(merge_with_id, req.householdCode);
+    if (src) {
+      db.prepare(`UPDATE items SET quantity=?, purchased_date=?, updated_at=datetime('now') WHERE id=?`)
+        .run(src.quantity + grocItem.quantity, today, merge_with_id);
+      db.prepare('DELETE FROM grocery_items WHERE id = ?').run(req.params.id);
+      return res.json({ success: true });
+    }
+  }
+
+  // Fuzzy match — unless force_new is set
+  if (!force_new) {
+    const fuzzy = db.prepare(
+      `SELECT * FROM items WHERE LOWER(TRIM(name)) = LOWER(TRIM(?)) AND household_code = ? LIMIT 1`
+    ).get(grocItem.name, req.householdCode);
+    if (fuzzy) {
+      return res.json({ needsConfirmation: true, possibleMatch: fuzzy, groceryItem: grocItem });
+    }
+  }
+
+  // No match — create new inventory item
+  db.prepare(`INSERT INTO items (name, quantity, unit, storage_location, purchased_date, household_code) VALUES (?, ?, ?, ?, ?, ?)`)
+    .run(grocItem.name, grocItem.quantity, grocItem.unit, grocItem.storage_location || 'pantry', today, req.householdCode);
   db.prepare('DELETE FROM grocery_items WHERE id = ?').run(req.params.id);
   res.json({ success: true });
 });

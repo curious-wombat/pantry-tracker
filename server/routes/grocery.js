@@ -59,6 +59,42 @@ router.post('/generate', (req, res) => {
   res.json({ added: inserted.length, items: inserted });
 });
 
+router.post('/restock/all', (req, res) => {
+  const { list_id } = req.body;
+  const hc = req.householdCode;
+  const checkedItems = db.prepare(
+    'SELECT * FROM grocery_items WHERE checked = 1 AND list_id = ? AND household_code = ?'
+  ).all(list_id, hc);
+
+  let restocked = 0;
+  for (const grocItem of checkedItems) {
+    if (grocItem.source_item_id) {
+      const src = db.prepare('SELECT * FROM items WHERE id = ?').get(grocItem.source_item_id);
+      if (src) {
+        db.prepare(`UPDATE items SET quantity=?, updated_at=datetime('now') WHERE id=?`)
+          .run(src.quantity + grocItem.quantity, grocItem.source_item_id);
+      }
+    } else {
+      db.prepare(`INSERT INTO items (name, quantity, unit, storage_location, household_code) VALUES (?, ?, ?, ?, ?)`)
+        .run(grocItem.name, grocItem.quantity, grocItem.unit, grocItem.storage_location || 'pantry', hc);
+    }
+    db.prepare('DELETE FROM grocery_items WHERE id = ?').run(grocItem.id);
+    restocked++;
+  }
+  res.json({ success: true, restocked });
+});
+
+router.delete('/checked/all', (req, res) => {
+  const { list_id } = req.query;
+  const hc = req.householdCode;
+  if (list_id) {
+    db.prepare('DELETE FROM grocery_items WHERE checked = 1 AND list_id = ? AND household_code = ?').run(list_id, hc);
+  } else {
+    db.prepare('DELETE FROM grocery_items WHERE checked = 1 AND household_code = ?').run(hc);
+  }
+  res.json({ success: true });
+});
+
 router.put('/:id', (req, res) => {
   const item = db.prepare('SELECT * FROM grocery_items WHERE id = ? AND household_code = ?').get(req.params.id, req.householdCode);
   if (!item) return res.status(404).json({ error: 'Item not found' });
@@ -89,46 +125,8 @@ router.post('/:id/restock', (req, res) => {
   res.json({ success: true });
 });
 
-router.post('/restock/all', (req, res) => {
-  const { list_id } = req.body;
-  const hc = req.householdCode;
-  const checkedItems = db.prepare(
-    'SELECT * FROM grocery_items WHERE checked = 1 AND list_id = ? AND household_code = ?'
-  ).all(list_id, hc);
-
-  let restocked = 0;
-  for (const grocItem of checkedItems) {
-    if (grocItem.source_item_id) {
-      const src = db.prepare('SELECT * FROM items WHERE id = ?').get(grocItem.source_item_id);
-      if (src) {
-        db.prepare(`UPDATE items SET quantity=?, updated_at=datetime('now') WHERE id=?`)
-          .run(src.quantity + grocItem.quantity, grocItem.source_item_id);
-      }
-    } else {
-      db.prepare(`INSERT INTO items (name, quantity, unit, storage_location, household_code) VALUES (?, ?, ?, ?, ?)`)
-        .run(grocItem.name, grocItem.quantity, grocItem.unit, grocItem.storage_location || 'pantry', hc);
-    }
-    db.prepare('DELETE FROM grocery_items WHERE id = ?').run(grocItem.id);
-    restocked++;
-  }
-  res.json({ success: true, restocked });
-});
-
-
-
 router.delete('/:id', (req, res) => {
   db.prepare('DELETE FROM grocery_items WHERE id = ? AND household_code = ?').run(req.params.id, req.householdCode);
-  res.json({ success: true });
-});
-
-router.delete('/checked/all', (req, res) => {
-  const { list_id } = req.query;
-  const hc = req.householdCode;
-  if (list_id) {
-    db.prepare('DELETE FROM grocery_items WHERE checked = 1 AND list_id = ? AND household_code = ?').run(list_id, hc);
-  } else {
-    db.prepare('DELETE FROM grocery_items WHERE checked = 1 AND household_code = ?').run(hc);
-  }
   res.json({ success: true });
 });
 

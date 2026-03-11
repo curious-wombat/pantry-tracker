@@ -10,15 +10,24 @@ const TAG_COLORS = {
   default: 'bg-gray-100 text-gray-600'
 }
 
+const MEAL_TYPES = [
+  { id: 'breakfast', label: 'Breakfast', emoji: '🌅' },
+  { id: 'lunch',     label: 'Lunch',     emoji: '🥗' },
+  { id: 'dinner',    label: 'Dinner',    emoji: '🍽️' },
+  { id: 'snack',     label: 'Snack',     emoji: '🍎' },
+  { id: 'dessert',   label: 'Dessert',   emoji: '🍓' },
+]
+
 export default function MealSuggestions({ items }) {
   const [meals, setMeals] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [expanded, setExpanded] = useState(null)
+  const [mealType, setMealType] = useState('dinner')
 
   const availableItems = items.filter(i => i.quantity > 0)
 
-  const fetchSuggestions = async () => {
+  const fetchSuggestions = async (type = mealType) => {
     if (availableItems.length === 0) return
     setLoading(true)
     setError(null)
@@ -29,7 +38,7 @@ export default function MealSuggestions({ items }) {
       const res = await apiFetch('/api/meals/suggest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: availableItems })
+        body: JSON.stringify({ items: availableItems, mealType: type })
       })
       if (!res.ok) {
         const err = await res.json()
@@ -49,9 +58,28 @@ export default function MealSuggestions({ items }) {
       {/* Header */}
       <div className="bg-white px-5 pt-14 pb-4 sticky top-0 z-30 shadow-sm">
         <h1 className="font-display text-2xl font-bold text-gray-900 mb-1">💡 Meal Ideas</h1>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-400 mb-3">
           AI suggestions based on your {availableItems.length} available items
         </p>
+        {/* Meal type selector */}
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+          {MEAL_TYPES.map(type => (
+            <button
+              key={type.id}
+              onClick={() => {
+                setMealType(type.id)
+                if (meals.length > 0) fetchSuggestions(type.id)
+              }}
+              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold transition-all
+                ${mealType === type.id
+                  ? 'bg-forest text-white shadow-sm'
+                  : 'bg-cream-dark text-gray-500 active:scale-95'}`}
+            >
+              <span>{type.emoji}</span>
+              <span>{type.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto scroll-container px-4 pt-4 pb-4">
@@ -66,20 +94,20 @@ export default function MealSuggestions({ items }) {
         {meals.length === 0 && !loading && (
           <div className="text-center py-8 animate-fade-in">
             <div className="w-24 h-24 bg-forest/10 rounded-full flex items-center justify-center mx-auto mb-5">
-              <span className="text-5xl">🍳</span>
+              <span className="text-5xl">{MEAL_TYPES.find(t => t.id === mealType)?.emoji}</span>
             </div>
-            <h3 className="font-display text-xl font-bold text-gray-900 mb-2">What's for dinner?</h3>
+            <h3 className="font-display text-xl font-bold text-gray-900 mb-2">What's for {mealType}?</h3>
             <p className="text-gray-400 text-sm mb-6 max-w-xs mx-auto">
-              Get personalized high-protein, low-carb meal ideas based on what you have at home.
+              Get personalized high-protein, low-carb {mealType} ideas based on what you have at home.
             </p>
             {availableItems.length === 0 ? (
               <p className="text-terra text-sm font-medium">Add items to your inventory first</p>
             ) : (
               <button
-                onClick={fetchSuggestions}
+                onClick={() => fetchSuggestions(mealType)}
                 className="btn-primary px-8 py-4 text-base shadow-lift"
               >
-                ✨ Generate Meal Ideas
+                ✨ Generate {MEAL_TYPES.find(t => t.id === mealType)?.label} Ideas
               </button>
             )}
           </div>
@@ -119,10 +147,10 @@ export default function MealSuggestions({ items }) {
               ))}
             </div>
             <button
-              onClick={fetchSuggestions}
+              onClick={() => fetchSuggestions(mealType)}
               className="w-full py-3 bg-cream-dark text-forest font-semibold rounded-2xl text-sm active:scale-95 transition-transform"
             >
-              🔄 Regenerate suggestions
+              🔄 Regenerate {MEAL_TYPES.find(t => t.id === mealType)?.label} ideas
             </button>
           </>
         )}

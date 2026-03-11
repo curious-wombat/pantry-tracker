@@ -1,12 +1,18 @@
 import { useState, useEffect } from 'react'
 
 const UNITS = ['item', 'serving', 'oz', 'lb', 'kg', 'g', 'ml', 'L', 'cup', 'tbsp', 'tsp', 'can', 'box', 'bag', 'bunch', 'bottle', 'pack', 'slice']
-const CATEGORIES = ['Produce', 'Protein', 'Dairy', 'Grains', 'Pantry Staples', 'Snacks', 'Frozen', 'Condiments', 'Beverages', 'Other']
+const CATEGORIES = ['Produce', 'Protein', 'Dairy', 'Grains', 'Pantry Staples', 'Spices', 'Leftovers', 'Snacks', 'Frozen', 'Condiments', 'Beverages', 'Other']
 const LOCATIONS = [
   { value: 'pantry', label: '🫙 Pantry' },
   { value: 'fridge', label: '🥗 Fridge' },
   { value: 'freezer', label: '🧊 Freezer' }
 ]
+
+const addDays = (days) => {
+  const d = new Date()
+  d.setDate(d.getDate() + days)
+  return d.toISOString().split('T')[0]
+}
 
 export default function AddItemModal({ item, groceryLists = [], onSave, onClose }) {
   const isEdit = !!(item?.id)
@@ -19,7 +25,8 @@ export default function AddItemModal({ item, groceryLists = [], onSave, onClose 
     storage_location: 'pantry',
     commonly_used: false,
     low_stock_threshold: 1,
-    preferred_list_id: null
+    preferred_list_id: null,
+    expiration_date: null
   })
 
   useEffect(() => {
@@ -33,12 +40,28 @@ export default function AddItemModal({ item, groceryLists = [], onSave, onClose 
         commonly_used: item.commonly_used === 1 || item.commonly_used === true,
         low_stock_threshold: item.low_stock_threshold ?? 1,
         preferred_list_id: item.preferred_list_id ?? null,
+        expiration_date: item.expiration_date ?? null,
         ...(item.id ? { id: item.id } : {})
       })
     }
   }, [item])
 
   const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }))
+
+  // Auto-set expiration when category becomes Leftovers + fridge
+  const handleCategoryChange = (cat) => {
+    set('category', cat)
+    if (cat === 'Leftovers' && form.storage_location === 'fridge' && !form.expiration_date) {
+      set('expiration_date', addDays(4))
+    }
+  }
+
+  const handleLocationChange = (loc) => {
+    set('storage_location', loc)
+    if (form.category === 'Leftovers' && loc === 'fridge' && !form.expiration_date) {
+      set('expiration_date', addDays(4))
+    }
+  }
 
   const handleSubmit = () => {
     if (!form.name.trim()) return
@@ -49,6 +72,8 @@ export default function AddItemModal({ item, groceryLists = [], onSave, onClose 
     document.body.classList.add('modal-open')
     return () => document.body.classList.remove('modal-open')
   }, [])
+
+  const showExpiration = form.storage_location === 'fridge' || form.storage_location === 'freezer' || form.expiration_date
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end">
@@ -93,7 +118,7 @@ export default function AddItemModal({ item, groceryLists = [], onSave, onClose 
             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Storage Location</label>
             <div className="flex gap-2">
               {LOCATIONS.map(loc => (
-                <button key={loc.value} type="button" onClick={() => set('storage_location', loc.value)}
+                <button key={loc.value} type="button" onClick={() => handleLocationChange(loc.value)}
                   className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all border
                     ${form.storage_location === loc.value ? 'bg-forest text-white border-forest shadow-sm' : 'bg-cream text-gray-600 border-transparent'}`}>
                   {loc.label}
@@ -104,10 +129,32 @@ export default function AddItemModal({ item, groceryLists = [], onSave, onClose 
 
           <div>
             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Category</label>
-            <select value={form.category} onChange={e => set('category', e.target.value)} className="input-field">
+            <select value={form.category} onChange={e => handleCategoryChange(e.target.value)} className="input-field">
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
+
+          {showExpiration && (
+            <div className="animate-fade-in">
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  Expiration Date {form.category === 'Leftovers' ? '🍱' : ''}
+                </label>
+                {form.expiration_date && (
+                  <button onClick={() => set('expiration_date', null)} className="text-xs text-gray-400 font-medium">Clear</button>
+                )}
+              </div>
+              <input type="date" value={form.expiration_date || ''}
+                onChange={e => set('expiration_date', e.target.value || null)}
+                className="input-field" />
+              {form.category === 'Leftovers' && !form.expiration_date && (
+                <button onClick={() => set('expiration_date', addDays(4))}
+                  className="mt-1.5 text-xs text-forest font-semibold">
+                  + Set to 4 days from now
+                </button>
+              )}
+            </div>
+          )}
 
           <div className="flex items-center justify-between bg-cream rounded-xl px-4 py-3">
             <div>

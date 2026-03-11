@@ -10,6 +10,7 @@ export default function App() {
   const [inventoryLocation, setInventoryLocation] = useState('pantry')
   const [items, setItems] = useState([])
   const [groceryItems, setGroceryItems] = useState([])
+  const [groceryLists, setGroceryLists] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingItem, setEditingItem] = useState(null)
@@ -30,15 +31,19 @@ export default function App() {
     if (res.ok) setGroceryItems(await res.json())
   }, [])
 
-  useEffect(() => {
-    Promise.all([fetchItems(), fetchGrocery()]).finally(() => setLoading(false))
-  }, [fetchItems, fetchGrocery])
+  const fetchLists = useCallback(async () => {
+    const res = await fetch('/api/lists')
+    if (res.ok) setGroceryLists(await res.json())
+  }, [])
 
-  // ── Item CRUD ──────────────────────────────────────────────
+  useEffect(() => {
+    Promise.all([fetchItems(), fetchGrocery(), fetchLists()]).finally(() => setLoading(false))
+  }, [fetchItems, fetchGrocery, fetchLists])
+
+  // Item CRUD
   const saveItem = async (data) => {
     const isEdit = !!data.id
-    const url = isEdit ? `/api/items/${data.id}` : '/api/items'
-    const res = await fetch(url, {
+    const res = await fetch(isEdit ? `/api/items/${data.id}` : '/api/items', {
       method: isEdit ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -66,7 +71,21 @@ export default function App() {
     }
   }
 
-  // ── Grocery CRUD ───────────────────────────────────────────
+  const addToGroceryList = async (itemId, listId) => {
+    const res = await fetch('/api/grocery/add-from-inventory', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ item_id: itemId, list_id: listId })
+    })
+    if (res.ok) {
+      await fetchGrocery()
+      showToast('Added to grocery list!')
+    } else if (res.status === 409) {
+      showToast('Already on grocery list', 'info')
+    }
+  }
+
+  // Grocery CRUD
   const addGroceryItem = async (data) => {
     const res = await fetch('/api/grocery', {
       method: 'POST',
@@ -76,13 +95,16 @@ export default function App() {
     if (res.ok) { await fetchGrocery(); showToast('Added to grocery list') }
   }
 
-  const toggleGroceryItem = async (id, checked) => {
+  const updateGroceryItem = async (id, data) => {
     const res = await fetch(`/api/grocery/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ checked })
+      body: JSON.stringify(data)
     })
-    if (res.ok) setGroceryItems(prev => prev.map(i => i.id === id ? { ...i, checked: checked ? 1 : 0 } : i))
+    if (res.ok) {
+      const updated = await res.json()
+      setGroceryItems(prev => prev.map(i => i.id === id ? updated : i))
+    }
   }
 
   const deleteGroceryItem = async (id) => {
@@ -105,10 +127,36 @@ export default function App() {
     showToast('Restocked to inventory!')
   }
 
-  const clearCheckedGrocery = async () => {
-    await fetch('/api/grocery/checked/all', { method: 'DELETE' })
-    setGroceryItems(prev => prev.filter(i => !i.checked))
+  const clearCheckedGrocery = async (listId) => {
+    const url = listId ? `/api/grocery/checked/all?list_id=${listId}` : '/api/grocery/checked/all'
+    await fetch(url, { method: 'DELETE' })
+    setGroceryItems(prev => listId ? prev.filter(i => !(i.checked && i.list_id === listId)) : prev.filter(i => !i.checked))
     showToast('Cleared checked items')
+  }
+
+  // List CRUD
+  const createList = async (name, color) => {
+    const res = await fetch('/api/lists', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, color })
+    })
+    if (res.ok) { await fetchLists(); showToast('List created') }
+  }
+
+  const updateList = async (id, data) => {
+    const res = await fetch(`/api/lists/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    if (res.ok) { await fetchLists(); showToast('List updated') }
+  }
+
+  const deleteList = async (id) => {
+    const res = await fetch(`/api/lists/${id}`, { method: 'DELETE' })
+    if (res.ok) { await Promise.all([fetchLists(), fetchGrocery()]); showToast('List deleted') }
+    else showToast('Cannot delete the last list', 'warning')
   }
 
   const openEdit = (item) => { setEditingItem(item); setShowAddModal(true) }
@@ -116,6 +164,8 @@ export default function App() {
     setEditingItem({ storage_location: location || inventoryLocation })
     setShowAddModal(true)
   }
+
+  const lowStockCount = items.filter(i => i.commonly_used === 1 && i.quantity <= i.low_stock_threshold).length
 
   if (loading) {
     return (
@@ -128,11 +178,8 @@ export default function App() {
     )
   }
 
-  const lowStockCount = items.filter(i => i.commonly_used && i.quantity <= i.low_stock_threshold).length
-
   return (
     <div className="min-h-screen bg-cream font-body">
-      {/* Toast */}
       {toast && (
         <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-slide-up
           px-5 py-3 rounded-2xl shadow-lift text-white text-sm font-semibold
@@ -141,7 +188,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Main Content */}
       <main className="pb-safe">
         {activeTab === 'inventory' && (
           <InventoryView
@@ -152,18 +198,24 @@ export default function App() {
             onEdit={openEdit}
             onDelete={deleteItem}
             onAdd={openAdd}
+            onAddToGrocery={addToGroceryList}
+            groceryLists={groceryLists}
             lowStockCount={lowStockCount}
           />
         )}
         {activeTab === 'grocery' && (
           <GroceryList
             items={groceryItems}
+            lists={groceryLists}
             onAdd={addGroceryItem}
-            onToggle={toggleGroceryItem}
+            onUpdate={updateGroceryItem}
             onDelete={deleteGroceryItem}
             onGenerate={generateGroceryList}
             onRestock={restockGroceryItem}
             onClearChecked={clearCheckedGrocery}
+            onCreateList={createList}
+            onUpdateList={updateList}
+            onDeleteList={deleteList}
           />
         )}
         {activeTab === 'meals' && (
@@ -181,6 +233,7 @@ export default function App() {
       {showAddModal && (
         <AddItemModal
           item={editingItem}
+          groceryLists={groceryLists}
           onSave={saveItem}
           onClose={() => { setShowAddModal(false); setEditingItem(null) }}
         />

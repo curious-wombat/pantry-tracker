@@ -1,5 +1,19 @@
 import { useState, useRef } from 'react'
 
+const today = () => new Date().toISOString().split('T')[0]
+
+const expirationStatus = (dateStr) => {
+  if (!dateStr) return null
+  const now = new Date(); now.setHours(0,0,0,0)
+  const exp = new Date(dateStr + 'T00:00:00')
+  const days = Math.round((exp - now) / 86400000)
+  if (days < 0) return { label: 'Expired', color: 'bg-red-100 text-red-600', urgent: true }
+  if (days === 0) return { label: 'Expires today', color: 'bg-red-100 text-red-600', urgent: true }
+  if (days === 1) return { label: 'Exp tomorrow', color: 'bg-terra/15 text-terra', urgent: true }
+  if (days <= 3) return { label: `Exp in ${days}d`, color: 'bg-terra/15 text-terra', urgent: false }
+  return { label: `Exp ${exp.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`, color: 'bg-gray-100 text-gray-500', urgent: false }
+}
+
 export default function ItemCard({ item, onUse, onEdit, onDelete, onAddToGrocery, groceryLists = [] }) {
   const [showActions, setShowActions] = useState(false)
   const [showListPicker, setShowListPicker] = useState(false)
@@ -8,6 +22,7 @@ export default function ItemCard({ item, onUse, onEdit, onDelete, onAddToGrocery
 
   const isLow = item.commonly_used === 1 && item.quantity < item.low_stock_threshold
   const isEmpty = item.quantity <= 0
+  const expStatus = expirationStatus(item.expiration_date)
 
   const handlePressStart = () => {
     pressTimer.current = setTimeout(() => setShowActions(true), 400)
@@ -38,6 +53,7 @@ export default function ItemCard({ item, onUse, onEdit, onDelete, onAddToGrocery
         ${showActions || showListPicker ? 'z-50 shadow-lift' : 'z-0'}`}>
 
         {isLow && !isEmpty && <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-terra to-amber" />}
+        {expStatus?.urgent && <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-red-400 to-red-500" />}
 
         <div className="flex items-center gap-3 p-4"
           onTouchStart={handlePressStart} onTouchEnd={handlePressEnd}
@@ -61,6 +77,7 @@ export default function ItemCard({ item, onUse, onEdit, onDelete, onAddToGrocery
               <span className="text-xs text-gray-400">{item.category}</span>
               {isLow && <span className="tag bg-terra/10 text-terra">Low stock</span>}
               {isEmpty && <span className="tag bg-gray-100 text-gray-500">Out</span>}
+              {expStatus && <span className={`tag ${expStatus.color}`}>{expStatus.label}</span>}
             </div>
           </div>
 

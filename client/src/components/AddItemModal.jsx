@@ -15,13 +15,14 @@ const addDays = (days) => {
   return d.toISOString().split('T')[0]
 }
 
-export default function AddItemModal({ item, groceryLists = [], onSave, onClose }) {
+export default function AddItemModal({ item, groceryLists = [], onSave, onClose, groceryMode = false, groceryListName = '' }) {
   const isEdit = !!(item?.id)
+  const [suggesting, setSuggesting] = useState(false)
 
   const [form, setForm] = useState({
     name: '',
     quantity: 1,
-    unit: 'item',
+    unit: 'each',
     category: 'Pantry Staples',
     storage_location: 'pantry',
     commonly_used: false,
@@ -36,7 +37,7 @@ export default function AddItemModal({ item, groceryLists = [], onSave, onClose 
       setForm({
         name: item.name || '',
         quantity: item.quantity ?? 1,
-        unit: item.unit || 'item',
+        unit: item.unit || 'each',
         category: item.category || 'Pantry Staples',
         storage_location: item.storage_location || 'pantry',
         commonly_used: item.commonly_used === 1 || item.commonly_used === true,
@@ -48,8 +49,6 @@ export default function AddItemModal({ item, groceryLists = [], onSave, onClose 
       })
     }
   }, [item])
-
-  const [suggesting, setSuggesting] = useState(false)
 
   const handleNameBlur = async () => {
     if (isEdit || !form.name.trim() || form.name.trim().length < 2) return
@@ -72,7 +71,6 @@ export default function AddItemModal({ item, groceryLists = [], onSave, onClose 
 
   const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }))
 
-  // Auto-set expiration when category becomes Leftovers + fridge
   const handleCategoryChange = (cat) => {
     set('category', cat)
     if (cat === 'Leftovers' && form.storage_location === 'fridge' && !form.expiration_date) {
@@ -97,7 +95,15 @@ export default function AddItemModal({ item, groceryLists = [], onSave, onClose 
     return () => document.body.classList.remove('modal-open')
   }, [])
 
-  const showExpiration = form.storage_location === 'fridge' || form.storage_location === 'freezer' || form.expiration_date
+  const showExpiration = !groceryMode && (form.storage_location === 'fridge' || form.storage_location === 'freezer' || form.expiration_date)
+
+  const title = groceryMode
+    ? `Add to ${groceryListName || 'Grocery'}`
+    : isEdit ? 'Edit Item' : 'Add Item'
+
+  const submitLabel = groceryMode
+    ? `Add to ${groceryListName || 'Grocery'}`
+    : isEdit ? 'Save Changes' : 'Add to ' + form.storage_location.charAt(0).toUpperCase() + form.storage_location.slice(1)
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end">
@@ -107,7 +113,7 @@ export default function AddItemModal({ item, groceryLists = [], onSave, onClose 
           <div className="w-10 h-1 bg-gray-200 rounded-full" />
         </div>
         <div className="flex items-center justify-between px-5 pt-2 pb-4 border-b border-gray-100">
-          <h2 className="font-display text-xl font-bold text-gray-900">{isEdit ? 'Edit Item' : 'Add Item'}</h2>
+          <h2 className="font-display text-xl font-bold text-gray-900">{title}</h2>
           <button onClick={onClose} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4">
               <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" />
@@ -116,6 +122,7 @@ export default function AddItemModal({ item, groceryLists = [], onSave, onClose 
         </div>
 
         <div className="overflow-y-auto scroll-container px-5 py-4 space-y-4 flex-1">
+          {/* Name */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Item Name *</label>
@@ -127,6 +134,7 @@ export default function AddItemModal({ item, groceryLists = [], onSave, onClose 
               autoFocus className="input-field" />
           </div>
 
+          {/* Quantity + Unit */}
           <div className="flex gap-3">
             <div className="flex-1">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Quantity</label>
@@ -143,6 +151,7 @@ export default function AddItemModal({ item, groceryLists = [], onSave, onClose 
             </div>
           </div>
 
+          {/* Storage Location */}
           <div>
             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Storage Location</label>
             <div className="flex gap-2">
@@ -156,13 +165,17 @@ export default function AddItemModal({ item, groceryLists = [], onSave, onClose 
             </div>
           </div>
 
-          <div>
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Category</label>
-            <select value={form.category} onChange={e => handleCategoryChange(e.target.value)} className="input-field">
-              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
+          {/* Category — inventory only */}
+          {!groceryMode && (
+            <div>
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Category</label>
+              <select value={form.category} onChange={e => handleCategoryChange(e.target.value)} className="input-field">
+                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          )}
 
+          {/* Expiration — inventory only */}
           {showExpiration && (
             <div className="animate-fade-in">
               <div className="flex items-center justify-between mb-1.5">
@@ -185,71 +198,79 @@ export default function AddItemModal({ item, groceryLists = [], onSave, onClose 
             </div>
           )}
 
-          <div className="animate-fade-in">
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Purchase Date</label>
-              {form.purchased_date && (
-                <button onClick={() => set('purchased_date', null)} className="text-xs text-gray-400 font-medium">Clear</button>
-              )}
+          {/* Purchase Date — inventory only */}
+          {!groceryMode && (
+            <div className="animate-fade-in">
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Purchase Date</label>
+                {form.purchased_date && (
+                  <button onClick={() => set('purchased_date', null)} className="text-xs text-gray-400 font-medium">Clear</button>
+                )}
+              </div>
+              <div className="flex gap-2 items-center">
+                <input type="date" value={form.purchased_date || ''}
+                  onChange={e => set('purchased_date', e.target.value || null)}
+                  className="input-field flex-1" />
+                {!form.purchased_date && (
+                  <button onClick={() => set('purchased_date', new Date().toISOString().split('T')[0])}
+                    className="text-xs text-forest font-semibold whitespace-nowrap">
+                    Today
+                  </button>
+                )}
+              </div>
             </div>
-            <div className="flex gap-2 items-center">
-              <input type="date" value={form.purchased_date || ''}
-                onChange={e => set('purchased_date', e.target.value || null)}
-                className="input-field flex-1" />
-              {!form.purchased_date && (
-                <button onClick={() => set('purchased_date', new Date().toISOString().split('T')[0])}
-                  className="text-xs text-forest font-semibold whitespace-nowrap">
-                  Today
-                </button>
-              )}
-            </div>
-          </div>
+          )}
 
-          <div className="flex items-center justify-between bg-cream rounded-xl px-4 py-3">
-            <div>
-              <p className="font-semibold text-gray-800 text-sm">Commonly Used ★</p>
-              <p className="text-xs text-gray-400 mt-0.5">Auto-add to grocery list when low</p>
-            </div>
-            <button type="button" onClick={() => set('commonly_used', !form.commonly_used)}
-              className={`w-12 h-6 rounded-full transition-all relative ${form.commonly_used ? 'bg-forest' : 'bg-gray-300'}`}>
-              <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${form.commonly_used ? 'left-6' : 'left-0.5'}`} />
-            </button>
-          </div>
-
-          {form.commonly_used && (
-            <div className="space-y-3 animate-fade-in">
-              <div>
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Low Stock Alert When Below</label>
-                <div className="flex items-center gap-3">
-                  <input type="number" min="0" step="0.5" value={form.low_stock_threshold}
-                    onChange={e => set('low_stock_threshold', e.target.value)}
-                    onBlur={e => set('low_stock_threshold', parseFloat(e.target.value) || 1)}
-                    className="input-field flex-1" />
-                  <span className="text-gray-500 text-sm font-medium whitespace-nowrap">{form.unit}</span>
+          {/* Commonly Used — inventory only */}
+          {!groceryMode && (
+            <>
+              <div className="flex items-center justify-between bg-cream rounded-xl px-4 py-3">
+                <div>
+                  <p className="font-semibold text-gray-800 text-sm">Commonly Used ★</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Auto-add to grocery list when low</p>
                 </div>
+                <button type="button" onClick={() => set('commonly_used', !form.commonly_used)}
+                  className={`w-12 h-6 rounded-full transition-all relative ${form.commonly_used ? 'bg-forest' : 'bg-gray-300'}`}>
+                  <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${form.commonly_used ? 'left-6' : 'left-0.5'}`} />
+                </button>
               </div>
 
-              {groceryLists.length > 0 && (
-                <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Usually Buy At</label>
-                  <div className="flex flex-wrap gap-2">
-                    <button type="button" onClick={() => set('preferred_list_id', null)}
-                      className={`px-3 py-1.5 rounded-xl text-sm font-semibold transition-all border
-                        ${form.preferred_list_id === null ? 'bg-forest text-white border-forest' : 'bg-cream text-gray-600 border-transparent'}`}>
-                      Any
-                    </button>
-                    {groceryLists.map(list => (
-                      <button key={list.id} type="button" onClick={() => set('preferred_list_id', list.id)}
-                        className={`px-3 py-1.5 rounded-xl text-sm font-semibold transition-all border
-                          ${form.preferred_list_id === list.id ? 'text-white border-transparent' : 'bg-cream text-gray-600 border-transparent'}`}
-                        style={form.preferred_list_id === list.id ? { backgroundColor: list.color } : {}}>
-                        {list.name}
-                      </button>
-                    ))}
+              {form.commonly_used && (
+                <div className="space-y-3 animate-fade-in">
+                  <div>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Low Stock Alert When Below</label>
+                    <div className="flex items-center gap-3">
+                      <input type="number" min="0" step="0.5" value={form.low_stock_threshold}
+                        onChange={e => set('low_stock_threshold', e.target.value)}
+                        onBlur={e => set('low_stock_threshold', parseFloat(e.target.value) || 1)}
+                        className="input-field flex-1" />
+                      <span className="text-gray-500 text-sm font-medium whitespace-nowrap">{form.unit}</span>
+                    </div>
                   </div>
+
+                  {groceryLists.length > 0 && (
+                    <div>
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Usually Buy At</label>
+                      <div className="flex flex-wrap gap-2">
+                        <button type="button" onClick={() => set('preferred_list_id', null)}
+                          className={`px-3 py-1.5 rounded-xl text-sm font-semibold transition-all border
+                            ${form.preferred_list_id === null ? 'bg-forest text-white border-forest' : 'bg-cream text-gray-600 border-transparent'}`}>
+                          Any
+                        </button>
+                        {groceryLists.map(list => (
+                          <button key={list.id} type="button" onClick={() => set('preferred_list_id', list.id)}
+                            className={`px-3 py-1.5 rounded-xl text-sm font-semibold transition-all border
+                              ${form.preferred_list_id === list.id ? 'text-white border-transparent' : 'bg-cream text-gray-600 border-transparent'}`}
+                            style={form.preferred_list_id === list.id ? { backgroundColor: list.color } : {}}>
+                            {list.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
+            </>
           )}
         </div>
 
@@ -257,7 +278,7 @@ export default function AddItemModal({ item, groceryLists = [], onSave, onClose 
           <button onClick={handleSubmit} disabled={!form.name.trim()}
             className={`w-full py-4 rounded-2xl font-bold text-base transition-all
               ${form.name.trim() ? 'bg-forest text-white shadow-md active:scale-98' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}>
-            {isEdit ? 'Save Changes' : 'Add to ' + form.storage_location.charAt(0).toUpperCase() + form.storage_location.slice(1)}
+            {submitLabel}
           </button>
         </div>
       </div>

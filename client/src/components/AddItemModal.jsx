@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
+import { apiFetch } from '../api'
 
-const UNITS = ['item', 'serving', 'oz', 'lb', 'kg', 'g', 'ml', 'L', 'cup', 'tbsp', 'tsp', 'can', 'jar', 'box', 'bag', 'bunch', 'bottle', 'pack', 'slice']
+const UNITS = ['each', 'serving', 'oz', 'lb', 'can', 'jar', 'bag', 'bunch', 'bottle', 'pack', 'container']
 const CATEGORIES = ['Produce', 'Protein', 'Dairy', 'Grains', 'Pantry Staples', 'Spices', 'Leftovers', 'Snacks', 'Frozen', 'Condiments', 'Beverages', 'Other']
 const LOCATIONS = [
   { value: 'pantry', label: '🫙 Pantry' },
@@ -47,6 +48,27 @@ export default function AddItemModal({ item, groceryLists = [], onSave, onClose 
       })
     }
   }, [item])
+
+  const [suggesting, setSuggesting] = useState(false)
+
+  const handleNameBlur = async () => {
+    if (isEdit || !form.name.trim() || form.name.trim().length < 2) return
+    setSuggesting(true)
+    try {
+      const res = await apiFetch(`/api/items/suggest?name=${encodeURIComponent(form.name.trim())}`)
+      if (res.ok) {
+        const { category, storage_location, unit, quantity } = await res.json()
+        setForm(prev => ({
+          ...prev,
+          ...(category ? { category } : {}),
+          ...(storage_location ? { storage_location } : {}),
+          ...(unit ? { unit } : {}),
+          ...(quantity ? { quantity } : {})
+        }))
+      }
+    } catch (e) { /* silent fail */ }
+    finally { setSuggesting(false) }
+  }
 
   const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }))
 
@@ -95,9 +117,14 @@ export default function AddItemModal({ item, groceryLists = [], onSave, onClose 
 
         <div className="overflow-y-auto scroll-container px-5 py-4 space-y-4 flex-1">
           <div>
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Item Name *</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Item Name *</label>
+              {suggesting && <span className="text-xs text-forest font-medium animate-pulse">✨ Suggesting...</span>}
+            </div>
             <input type="text" placeholder="e.g. Chicken breast" value={form.name}
-              onChange={e => set('name', e.target.value)} autoFocus className="input-field" />
+              onChange={e => set('name', e.target.value)}
+              onBlur={handleNameBlur}
+              autoFocus className="input-field" />
           </div>
 
           <div className="flex gap-3">

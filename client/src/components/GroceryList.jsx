@@ -18,11 +18,9 @@ import { CSS } from '@dnd-kit/utilities'
 
 const LIST_COLORS = ['#2D6A4F', '#457B9D', '#E07B39', '#9B5DE5', '#E63946', '#2A9D8F', '#E9C46A']
 
-export default function GroceryList({ items, lists, onAdd, onUpdate, onDelete, onGenerate, onRestock, onRestockAll, onClearChecked, onCreateList, onUpdateList, onDeleteList }) {
+export default function GroceryList({ items, lists, onAdd, onUpdate, onDelete, onGenerate, onRestock, onRestockAll, onClearChecked, onCreateList, onUpdateList, onDeleteList, onOpenAdd }) {
   const [activeListId, setActiveListId] = useState(null)
-  const [showAddForm, setShowAddForm] = useState(false)
   const [showListManager, setShowListManager] = useState(false)
-  const [newItem, setNewItem] = useState({ name: '', quantity: 1, unit: 'item', storage_location: 'pantry' })
   const [restocking, setRestocking] = useState(null)
   const [dragActiveId, setDragActiveId] = useState(null)
   const [editingList, setEditingList] = useState(null)
@@ -40,13 +38,6 @@ export default function GroceryList({ items, lists, onAdd, onUpdate, onDelete, o
   const listItems = useMemo(() => items.filter(i => i.list_id === currentListId), [items, currentListId])
   const unchecked = listItems.filter(i => !i.checked).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
   const checked = listItems.filter(i => i.checked)
-
-  const handleAdd = () => {
-    if (!newItem.name.trim()) return
-    onAdd({ ...newItem, list_id: currentListId })
-    setNewItem({ name: '', quantity: 1, unit: 'item', storage_location: 'pantry' })
-    setShowAddForm(false)
-  }
 
   const handleRestock = async (id) => {
     setRestocking(id)
@@ -92,7 +83,7 @@ export default function GroceryList({ items, lists, onAdd, onUpdate, onDelete, o
               <button onClick={() => setShowListManager(!showListManager)} className="px-3 py-2 bg-cream-dark text-gray-600 text-xs font-bold rounded-xl active:scale-95 transition-transform">
                 ✏️ Lists
               </button>
-              <button onClick={() => setShowAddForm(!showAddForm)}
+              <button onClick={() => onOpenAdd(currentListId, currentList?.name)}
                 className="w-10 h-10 bg-forest rounded-full flex items-center justify-center text-white shadow-md active:scale-95 transition-transform">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5">
                   <line x1="12" y1="5" x2="12" y2="19" strokeLinecap="round" />
@@ -118,36 +109,6 @@ export default function GroceryList({ items, lists, onAdd, onUpdate, onDelete, o
             })}
           </div>
         </div>
-
-        {/* Add form */}
-        {showAddForm && (
-          <div className="mx-4 mt-3 bg-white rounded-2xl shadow-card p-4 animate-slide-up">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-              Add to {currentList?.name}
-            </p>
-            <input type="text" placeholder="Item name" value={newItem.name}
-              onChange={e => setNewItem(p => ({ ...p, name: e.target.value }))}
-              onKeyDown={e => e.key === 'Enter' && handleAdd()}
-              autoFocus className="input-field mb-2 text-sm" />
-            <div className="flex gap-2 mb-3">
-              <input type="number" min="0.5" step="0.5" value={newItem.quantity}
-                onChange={e => setNewItem(p => ({ ...p, quantity: parseFloat(e.target.value) || 1 }))}
-                className="input-field w-16 text-center text-sm" />
-              <input type="text" placeholder="unit" value={newItem.unit}
-                onChange={e => setNewItem(p => ({ ...p, unit: e.target.value }))}
-                className="input-field flex-1 text-sm" />
-              <select value={newItem.storage_location}
-                onChange={e => setNewItem(p => ({ ...p, storage_location: e.target.value }))}
-                className="input-field flex-1 text-sm">
-                {['pantry', 'fridge', 'freezer'].map(l => <option key={l} value={l}>{l.charAt(0).toUpperCase() + l.slice(1)}</option>)}
-              </select>
-            </div>
-            <div className="flex gap-2">
-              <button onClick={() => setShowAddForm(false)} className="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl font-semibold text-sm">Cancel</button>
-              <button onClick={handleAdd} disabled={!newItem.name.trim()} className="flex-1 py-2.5 bg-forest text-white rounded-xl font-semibold text-sm disabled:opacity-40">Add</button>
-            </div>
-          </div>
-        )}
 
         {/* List manager */}
         {showListManager && (

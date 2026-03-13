@@ -56,7 +56,7 @@ router.get('/suggest', async (req, res) => {
           content: `For the grocery item "${name}", respond with ONLY a JSON object (no markdown) with these exact fields:
 - category: one of [Produce, Protein, Dairy, Grains, Pantry Staples, Spices, Leftovers, Snacks, Frozen, Condiments, Beverages, Other]
 - storage_location: one of [pantry, fridge, freezer]
-- unit: one of [item, serving, oz, lb, kg, g, ml, L, cup, tbsp, tsp, can, jar, box, bag, bunch, bottle, pack, slice]
+- unit: one of [each, serving, oz, lb, can, jar, bag, bunch, bottle, pack, container]
 - quantity: a sensible default number for how someone would typically buy this item
 
 Examples:

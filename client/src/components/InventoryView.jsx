@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import ItemCard from './ItemCard'
 import ImportModal from './ImportModal'
+import ScanModal from './ScanModal'
 
 const LOCATION_CONFIG = {
   pantry: { label: 'Pantry', emoji: '🫙', color: 'bg-amber/20 text-amber-dark border-amber/30' },
@@ -12,6 +13,7 @@ export default function InventoryView({ items, location, setLocation, onUse, onI
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState('category')
   const [showImport, setShowImport] = useState(false)
+  const [showScan, setShowScan] = useState(false)
 
   const isSearching = !!search
 
@@ -77,6 +79,10 @@ export default function InventoryView({ items, location, setLocation, onUse, onI
             <button onClick={() => setShowImport(true)}
               className="px-3 py-2 bg-cream-dark text-gray-600 text-xs font-bold rounded-xl active:scale-95 transition-transform">
               📥 Import
+            </button>
+            <button onClick={() => setShowScan(true)}
+              className="px-3 py-2 bg-cream-dark text-gray-600 text-xs font-bold rounded-xl active:scale-95 transition-transform">
+              📷 Scan
             </button>
             <button onClick={() => onAdd(location)}
               className="w-10 h-10 bg-forest rounded-full flex items-center justify-center text-white shadow-md active:scale-95 transition-transform">
@@ -167,6 +173,13 @@ export default function InventoryView({ items, location, setLocation, onUse, onI
         <ImportModal
           onClose={() => setShowImport(false)}
           onImportComplete={() => { onImportComplete(); setShowImport(false) }}
+        />
+      )}
+
+      {showScan && (
+        <ScanModal
+          onClose={() => setShowScan(false)}
+          onImportComplete={() => { onImportComplete(); setShowScan(false) }}
         />
       )}
     </div>

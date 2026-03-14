@@ -131,7 +131,8 @@ export default function App() {
     }
   }
 
-  const [pendingRestock, setPendingRestock] = useState(null) // { groceryItem, possibleMatch }
+  const [pendingRestock, setPendingRestock] = useState(null)
+  const [groceryAddContext, setGroceryAddContext] = useState(null) // { listId, listName } // { groceryItem, possibleMatch }
 
   const restockGroceryItem = async (id, options = {}) => {
     const res = await apiFetch(`/api/grocery/${id}/restock`, { method: 'POST', body: JSON.stringify(options) })
@@ -183,6 +184,31 @@ export default function App() {
     const res = await apiFetch(`/api/lists/${id}`, { method: 'DELETE' })
     if (res.ok) { await Promise.all([fetchLists(), fetchGrocery()]); showToast('List deleted') }
     else showToast('Cannot delete the last list', 'warning')
+  }
+
+  const openGroceryAdd = (listId, listName) => {
+    setGroceryAddContext({ listId, listName })
+    setShowAddModal(true)
+  }
+
+  const saveGroceryFromModal = async (data) => {
+    if (!groceryAddContext) return
+    const res = await apiFetch('/api/grocery', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: data.name,
+        quantity: data.quantity,
+        unit: data.unit,
+        storage_location: data.storage_location,
+        list_id: groceryAddContext.listId
+      })
+    })
+    if (res.ok) {
+      await fetchGrocery()
+      showToast('Added to grocery list')
+      setShowAddModal(false)
+      setGroceryAddContext(null)
+    }
   }
 
   const openEdit = (item) => { setEditingItem(item); setShowAddModal(true) }
@@ -264,6 +290,7 @@ export default function App() {
             onCreateList={createList}
             onUpdateList={updateList}
             onDeleteList={deleteList}
+            onOpenAdd={openGroceryAdd}
           />
         )}
         {activeTab === 'meals' && (
@@ -281,10 +308,12 @@ export default function App() {
 
       {showAddModal && (
         <AddItemModal
-          item={editingItem}
+          item={groceryAddContext ? null : editingItem}
           groceryLists={groceryLists}
-          onSave={saveItem}
-          onClose={() => { setShowAddModal(false); setEditingItem(null) }}
+          onSave={groceryAddContext ? saveGroceryFromModal : saveItem}
+          onClose={() => { setShowAddModal(false); setEditingItem(null); setGroceryAddContext(null) }}
+          groceryMode={!!groceryAddContext}
+          groceryListName={groceryAddContext?.listName || ''}
         />
       )}
 

@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3001;
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' ? true : 'http://localhost:5173'
 }));
-app.use(express.json());
+app.use(express.json({ limit: '20mb' }));
 
 // Health check — no auth needed
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));

@@ -57,6 +57,31 @@ A full-stack progressive web app (PWA) for tracking household pantry, fridge, an
 
 ---
 
+**Getting Started with Pantry Tracker**
+
+**1. Set up your household**
+When you first open the app, you'll be asked to enter a household code. Pick something simple like `your-name-house`. Anyone you share this code with can access the same pantry — keep it private.
+
+**2. Add your inventory**
+Tap the **+** button in the top right to add items one by one, or use **📥 Import** to bulk-upload a CSV. The fastest way after a grocery run is **📷 Scan** — take a photo of your haul and the app identifies everything automatically. Just review and confirm.
+
+When typing an item name, tap out of the field and the app will auto-suggest the category, location, unit, and quantity for you.
+
+**3. Set up your grocery lists**
+Go to the **Grocery** tab and tap **✏️ Lists** to create lists for each store you shop at (e.g. Trader Joe's, Costco). Items with low stock will show a ⭐ badge — tap **⚡ Auto-fill** to add them all at once.
+
+**4. Shop and restock**
+While shopping, check items off your list. When you're home, tap **↩ Restock All** in the Done section to send everything back to inventory automatically.
+
+**5. Get meal ideas**
+Tap **Meal Ideas**, choose a meal type, and get AI-powered recipe suggestions based on what you actually have. Expiring items get prioritized automatically.
+
+**Tips:**
+- Mark frequently bought items as **★ Commonly Used** so they trigger low-stock alerts
+- The navigation badge shows how many items are low or expiring soon
+- Hard refresh (**Cmd+Shift+R**) if an update doesn't seem to have loaded
+
+-----
 ## Tech Stack
 
 | Layer | Tech |

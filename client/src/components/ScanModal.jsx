@@ -151,7 +151,6 @@ export default function ScanModal({ onClose, onImportComplete }) {
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
-                capture="environment"
                 onChange={handleFileChange}
                 className="hidden" />
               <p className="text-xs text-gray-400 text-center">

@@ -1,6 +1,6 @@
-# 🥬 Pantry Tracker
+# 🐼 Pantry Panda
 
-A full-stack progressive web app (PWA) for tracking household pantry, fridge, and freezer inventory — with AI-powered meal suggestions, smart grocery list management, photo scanning, and multi-household support.
+A delightfully smart kitchen companion for tracking household pantry, fridge, and freezer inventory — with AI-powered meal suggestions, smart grocery list management, photo scanning, and multi-household support.
 
 **Live app:** https://pantry-tracker-production.up.railway.app  
 **GitHub:** https://github.com/curious-wombat/pantry-tracker
@@ -50,38 +50,45 @@ A full-stack progressive web app (PWA) for tracking household pantry, fridge, an
 - Each suggestion shows: prep time, calories, protein, carbs, fat, fiber, tags, ingredients you have, what to buy, and numbered step-by-step instructions
 
 ### Multi-Household
-- Each household has a unique code (e.g. `test-house`)
+- Each household has a unique code (e.g. `my-house`)
 - Switch households via 🏠 button in the inventory header
 - All data is scoped per household
 - Household code also accepted as a query param for API access
 
 ---
 
-## Getting Started with Pantry Tracker
+## Getting Started
 
-**1. Set up your household**
-When you first open the app, you'll be asked to enter a household code. Pick something simple like `your-name-house`. Anyone you share this code with can access the same pantry — keep it private.
+### First time setup
+1. Open the app at https://pantry-tracker-production.up.railway.app
+2. You'll be prompted to enter a household code — pick something memorable like `my-house` or `smith-family`
+3. Your household code is your key to your data — share it with anyone in your household so you can all use the same pantry
 
-**2. Add your inventory**
-Tap the **+** button in the top right to add items one by one, or use **📥 Import** to bulk-upload a CSV. The fastest way after a grocery run is **📷 Scan** — take a photo of your haul and the app identifies everything automatically. Just review and confirm.
+### Adding your inventory
+- Tap **📷 Scan** to photograph your grocery haul or pantry shelves — AI will identify items automatically
+- Or tap **+** to add items manually — AI will suggest category, location, and expiry date as you type
+- Use **📥 Import** to bulk-import from a CSV file
 
-When typing an item name, tap out of the field and the app will auto-suggest the category, location, unit, and quantity for you.
+### Grocery shopping
+- Add items to your grocery list manually, or tap **⚡ Auto-fill** to pull in everything that's running low
+- Check items off as you shop
+- When you're home, tap **↩ Restock All** to move everything back into inventory automatically
 
-**3. Set up your grocery lists**
-Go to the **Grocery** tab and tap **✏️ Lists** to create lists for each store you shop at (e.g. Trader Joe's, Costco). Items with low stock will show a ⭐ badge — tap **⚡ Auto-fill** to add them all at once.
+### Switching households
+- Tap the **🏠 your-code** button in the inventory header to switch to a different household code
 
-**4. Shop and restock**
-While shopping, check items off your list. When you're home, tap **↩ Restock All** in the Done section to send everything back to inventory automatically.
+### Installing as an app (PWA)
+On iPhone: open in Safari → Share → **Add to Home Screen**  
+On Android: open in Chrome → menu → **Add to Home Screen**
 
-**5. Get meal ideas**
-Tap **Meal Ideas**, choose a meal type, and get AI-powered recipe suggestions based on what you actually have. Expiring items get prioritized automatically.
+---
 
-**Tips:**
-- Mark frequently bought items as **★ Commonly Used** so they trigger low-stock alerts
-- The navigation badge shows how many items are low or expiring soon
-- Hard refresh (**Cmd+Shift+R**) if an update doesn't seem to have loaded
+## Security note
 
------
+Your household code is the only thing protecting your data. Don't use anything sensitive as your code, and don't share it publicly.
+
+---
+
 ## Tech Stack
 
 | Layer | Tech |

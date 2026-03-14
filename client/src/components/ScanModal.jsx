@@ -14,6 +14,7 @@ export default function ScanModal({ onClose, onImportComplete }) {
   const [selected, setSelected] = useState({})
   const [error, setError] = useState(null)
   const fileInputRef = useRef(null)
+  const libraryInputRef = useRef(null)
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0]
@@ -128,15 +129,23 @@ export default function ScanModal({ onClose, onImportComplete }) {
                 </div>
               )}
               {!preview ? (
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full h-48 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-3 active:bg-cream transition-colors">
+                <div className="w-full h-48 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-3">
                   <span className="text-4xl">📷</span>
                   <div className="text-center">
                     <p className="font-semibold text-gray-700">Take or upload a photo</p>
                     <p className="text-xs text-gray-400 mt-1">Groceries, pantry shelves, receipt</p>
                   </div>
-                </button>
+                  <div className="flex gap-3 mt-1">
+                    <button onClick={() => fileInputRef.current?.click()}
+                      className="px-4 py-2 bg-forest text-white rounded-xl text-sm font-semibold active:scale-95 transition-transform">
+                      📷 Camera
+                    </button>
+                    <button onClick={() => libraryInputRef.current?.click()}
+                      className="px-4 py-2 bg-cream-dark text-gray-700 rounded-xl text-sm font-semibold active:scale-95 transition-transform">
+                      🖼️ Library
+                    </button>
+                  </div>
+                </div>
               ) : (
                 <div className="relative">
                   <img src={preview} alt="Preview" className="w-full rounded-2xl object-cover max-h-64" />
@@ -149,6 +158,13 @@ export default function ScanModal({ onClose, onImportComplete }) {
               )}
               <input
                 ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleFileChange}
+                className="hidden" />
+              <input
+                ref={libraryInputRef}
                 type="file"
                 accept="image/*"
                 onChange={handleFileChange}
@@ -276,12 +292,11 @@ export default function ScanModal({ onClose, onImportComplete }) {
 
         {/* Footer button */}
         <div className="px-5 py-4 border-t border-gray-100">
-          {phase === 'upload' && (
+          {phase === 'upload' && preview && (
             <button
-              onClick={preview ? handleScan : () => fileInputRef.current?.click()}
-              className={`w-full py-4 rounded-2xl font-bold text-base transition-all
-                ${preview ? 'bg-forest text-white shadow-md active:scale-98' : 'bg-gray-100 text-gray-400'}`}>
-              {preview ? '✨ Identify Items' : '📷 Choose Photo'}
+              onClick={handleScan}
+              className="w-full py-4 rounded-2xl font-bold text-base bg-forest text-white shadow-md active:scale-98 transition-all">
+              ✨ Identify Items
             </button>
           )}
           {phase === 'review' && (

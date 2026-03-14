@@ -57,7 +57,7 @@ A full-stack progressive web app (PWA) for tracking household pantry, fridge, an
 
 ---
 
-**Getting Started with Pantry Tracker**
+## Getting Started with Pantry Tracker
 
 **1. Set up your household**
 When you first open the app, you'll be asked to enter a household code. Pick something simple like `your-name-house`. Anyone you share this code with can access the same pantry — keep it private.

@@ -56,13 +56,14 @@ export default function AddItemModal({ item, groceryLists = [], onSave, onClose,
     try {
       const res = await apiFetch(`/api/items/suggest?name=${encodeURIComponent(form.name.trim())}`)
       if (res.ok) {
-        const { category, storage_location, unit, quantity } = await res.json()
+        const { category, storage_location, unit, quantity, expiration_date } = await res.json()
         setForm(prev => ({
           ...prev,
           ...(category ? { category } : {}),
           ...(storage_location ? { storage_location } : {}),
           ...(unit ? { unit } : {}),
-          ...(quantity ? { quantity } : {})
+          ...(quantity ? { quantity } : {}),
+          ...(expiration_date ? { expiration_date } : {})
         }))
       }
     } catch (e) { /* silent fail */ }

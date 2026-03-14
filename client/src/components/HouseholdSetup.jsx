@@ -25,7 +25,7 @@ export default function HouseholdSetup({ onComplete, isSwitching = false, curren
         <div className="text-center mb-8">
           <div className="text-6xl mb-4">🥬</div>
           <h1 className="font-display text-3xl font-bold text-gray-900 mb-2">
-            {isSwitching ? 'Switch Household' : 'Pantry Tracker'}
+            {isSwitching ? 'Switch Household' : 'Pantry Panda'}
           </h1>
           <p className="text-gray-500 text-sm leading-relaxed">
             {isSwitching

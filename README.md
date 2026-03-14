@@ -59,27 +59,33 @@ A delightfully smart kitchen companion for tracking household pantry, fridge, an
 
 ## Getting Started
 
-### First time setup
-1. Open the app at https://pantry-tracker-production.up.railway.app
-2. You'll be prompted to enter a household code — pick something memorable like `my-house` or `smith-family`
-3. Your household code is your key to your data — share it with anyone in your household so you can all use the same pantry
+### 1. Set up your household
+When you first open the app, you'll be asked to enter a household code. Pick something simple like `your-name-house`. Anyone you share this code with can access the same pantry — keep it private. You can switch households anytime via the **🏠** button in the inventory header.
 
-### Adding your inventory
-- Tap **📷 Scan** to photograph your grocery haul or pantry shelves — AI will identify items automatically
-- Or tap **+** to add items manually — AI will suggest category, location, and expiry date as you type
-- Use **📥 Import** to bulk-import from a CSV file
+### 2. Add your inventory
+The fastest way after a grocery run is **📷 Scan** — take a photo of your haul and the app identifies everything automatically. Review, adjust, and confirm.
 
-### Grocery shopping
-- Add items to your grocery list manually, or tap **⚡ Auto-fill** to pull in everything that's running low
-- Check items off as you shop
-- When you're home, tap **↩ Restock All** to move everything back into inventory automatically
+Or tap **+** to add items manually. Type the item name, tab out of the field, and the app will auto-suggest category, storage location, unit, quantity, and expiry date for you — all editable.
 
-### Switching households
-- Tap the **🏠 your-code** button in the inventory header to switch to a different household code
+Use **📥 Import** to bulk-upload from a CSV file for a bigger one-time setup.
+
+### 3. Set up your grocery lists
+Go to the **Grocery** tab and tap **✏️ Lists** to create lists for each store you shop at (e.g. Trader Joe's, Costco, Asian Market). Mark frequently bought items as **★ Commonly Used** so they trigger low-stock alerts and can be auto-added to your grocery list.
+
+### 4. Shop and restock
+Check items off your list as you shop. When you're home, tap **↩ Restock All** in the Done section to send everything back to inventory automatically — quantities update and expiry dates are assigned.
+
+### 5. Get meal ideas
+Tap **Meal Ideas**, choose a meal type, and get AI-powered recipe suggestions based on what you actually have. Expiring items get prioritized automatically.
 
 ### Installing as an app (PWA)
 On iPhone: open in Safari → Share → **Add to Home Screen**  
 On Android: open in Chrome → menu → **Add to Home Screen**
+
+### Tips
+- The navigation badge shows how many items are low stock or expiring soon
+- **⚡ Auto-fill** adds all low-stock commonly-used items to your grocery list at once
+- Hard refresh (**Cmd+Shift+R**) if an update doesn't seem to have loaded
 
 ---
 

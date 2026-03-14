@@ -19,13 +19,28 @@ export default function ScanModal({ onClose, onImportComplete }) {
   const handleFileChange = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    setMediaType(file.type || 'image/jpeg')
+    setMediaType('image/jpeg')
     const reader = new FileReader()
     reader.onload = (ev) => {
       const dataUrl = ev.target.result
-      setPreview(dataUrl)
-      // Extract base64 portion only
-      setImageData(dataUrl.split(',')[1])
+      // Compress via canvas before sending
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const MAX = 1600
+        let { width, height } = img
+        if (width > MAX || height > MAX) {
+          if (width > height) { height = Math.round(height * MAX / width); width = MAX }
+          else { width = Math.round(width * MAX / height); height = MAX }
+        }
+        canvas.width = width
+        canvas.height = height
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height)
+        const compressed = canvas.toDataURL('image/jpeg', 0.85)
+        setPreview(compressed)
+        setImageData(compressed.split(',')[1])
+      }
+      img.src = dataUrl
     }
     reader.readAsDataURL(file)
   }

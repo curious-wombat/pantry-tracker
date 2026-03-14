@@ -78,6 +78,7 @@ export default function ScanModal({ onClose, onImportComplete }) {
             unit: item.unit,
             category: item.category,
             storage_location: item.storage_location,
+            expiration_date: item.expiration_date || null,
             purchased_date: today
           })
         })
@@ -247,6 +248,18 @@ export default function ScanModal({ onClose, onImportComplete }) {
                         className="input-field text-sm py-1.5 w-full">
                         {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
+
+                      {/* Expiry date if set */}
+                      {item.expiration_date && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-gray-400">Expires:</span>
+                          <input
+                            type="date"
+                            value={item.expiration_date}
+                            onChange={e => updateItem(item._id, 'expiration_date', e.target.value || null)}
+                            className="input-field text-xs py-1 flex-1" />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'favicon-16x16.png', 'favicon-32x32.png', 'apple-touch-icon.png', 'android-chrome-192x192.png', 'android-chrome-512x512.png'],
       manifest: {
-        name: 'Pantry Tracker',
-        short_name: 'Pantry',
+        name: 'Pantry Panda',
+        short_name: 'Panda',
         description: 'Track your pantry, fridge, and freezer',
         theme_color: '#2D6A4F',
         background_color: '#F7F5F0',
